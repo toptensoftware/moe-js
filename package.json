@@ -1,0 +1,14 @@
+{
+	"name": "moe-js",
+	"version": "0.0.1",
+	"description": "Lightweight, fast, Mustache inspired, JavaScript enabled template engine for Node/Express.",
+	"main": "moe.js",
+	"author": "Topten Software",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://bitbucket.org/toptensoftware/moe-js"
+	},
+	"homepage": "http://www.toptensoftware.com/moe-js",
+	"keywords": [ "express", "view engine", "template" ]
+}
