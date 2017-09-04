@@ -12,6 +12,8 @@ function MoeHelpers(moe)
 // Helper to encode html entities
 MoeHelpers.prototype.encode = function(str) 
 {
+	if (str === null || str === undefined)
+		return "";
 	return (""+str).replace(/["'&<>]/g, function(x) {
 	    switch (x) 
 	    {
