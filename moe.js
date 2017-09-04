@@ -12,7 +12,7 @@ function MoeHelpers(moe)
 // Helper to encode html entities
 MoeHelpers.prototype.encode = function(str) 
 {
-	return (""+str).replace(/["'&<>]/, function(x) {
+	return (""+str).replace(/["'&<>]/g, function(x) {
 	    switch (x) 
 	    {
 	      case '\"': return '&quot;';
@@ -29,17 +29,13 @@ MoeHelpers.prototype.each = function(outerScope, iter, cbItem, cbEmpty)
 {
 	var scope = {
 		outer: outerScope,
-		items: [],
 		index: -1,
 	};
 
 	if (iter)
 	{
 		// Get all items into an array
-		for (var i of iter) 
-		{
-			scope.items.push(i);
-		}
+		scope.items = Array.isArray(iter) ? iter : Array.from(iter);
 
 		// If any items process them
 		if (scope.items.length)
@@ -60,21 +56,22 @@ MoeHelpers.prototype.each = function(outerScope, iter, cbItem, cbEmpty)
 }
 
 // Render a partial
-MoeHelpers.prototype.partial = function(oldModel, scope, context, name, model)
+MoeHelpers.prototype.partial = function(model, context, scope, name, subModel)
 {
-	// Resolve model
-	if (!model && scope)
-		model = scope.item;
-	if (!model)
-		model = oldModel;
+	// Resolve subModel
+	if (!subModel && scope)
+		subModel = scope.item;
+	if (!subModel)
+		subModel = model;
 
+	// Call hooks
 	if (context.$moe)
 	{
-		// Decorate the model? (used by express binding to attach
-		// 		locals back onto the sub-model)
-		if (context.$moe.decoratePartialModel && model !== oldModel)
+		// Decorate the subModel? (used by express binding to attach
+		// 		locals back onto the sub-subModel)
+		if (context.$moe.decoratePartialModel && subModel !== model)
 		{
-			model = context.$moe.decoratePartialModel(model);
+			subModel = context.$moe.decoratePartialModel(subModel);
 		}
 
 		// Resolve the partial path?
@@ -88,18 +85,17 @@ MoeHelpers.prototype.partial = function(oldModel, scope, context, name, model)
 	var template = this.moe.compileFileSync(name);
 
 	// Invoke it
-	return template(model, context);
+	return template(subModel, context);
 }
 
 
 
 //////////////////////////////////////////////////////////////////////////////////
-// MoeEngine - actual Moe template engine
+// MoeEngine - Moe template engine
 
 function MoeEngine() 
 {
 	this.helpers = new MoeHelpers(this);
-	this.globals = {};
 	this.templates = {};
 	this.__express = middleware.bind(this);
 	this.express = this.__express;
@@ -108,9 +104,7 @@ function MoeEngine()
 	this.shouldPassLocals = false;
 }
 
-// Compile a string template, returns a function
-// Anything attached to this.helpers will be made available as globals
-// to the template
+// Compile a string template, returns a function(model, context)
 MoeEngine.prototype.compile = function(template)
 {
 	var re = /({{{?).*?(}}}?)/g;
@@ -239,10 +233,20 @@ MoeEngine.prototype.compile = function(template)
 					break;
 
 				case "each":
+					// Handle {{#each <controlVal> in <expr>}}
+					//   (vs) {{#each <expr>}}
+					var exprParts = expr.split(/[\s\t]+/);
+					var itemName = "item";
+					if (exprParts.length > 2 && exprParts[1] == 'in')
+					{
+						expr = filters.slice(2).join(' ');
+						itemName = exprParts[0];
+					}
+
 					blockTypeStack.push("each");
-					parts.push("${$.each(scope, ");
+					parts.push("${helpers.each(scope, ");
 					parts.push(expr);
-					parts.push(", function(scope, item) { return `");
+					parts.push(`, function(scope, ${itemName}) { return \``);
 					break;
 
 				case "else":
@@ -267,14 +271,14 @@ MoeEngine.prototype.compile = function(template)
 		else if (directive[0] == '>')
 		{
 			// Invoke partial
-			parts.push('${$.partial(model, scope, context, ');
+			parts.push('${helpers.partial(model, context, scope, ');
 			parts.push(directive.substr(1));
 			parts.push(')}');
 		}
 		else
 		{
 			// Encoded string output
-			parts.push("${$.encode(");
+			parts.push("${helpers.encode(");
 			parts.push(directive);
 			parts.push(")}");
 		}
@@ -297,31 +301,17 @@ MoeEngine.prototype.compile = function(template)
 	// Trailing text
 	parts.push(template.substr(lastIndex, template.length - lastIndex));
 
-	// Take all helpers.globals and map them to local variables is the
-	// template closure.  For function bind them to the helpers
-	var globals = Object.keys(this.globals).map(function(x) {
-		if (typeof(this.globals[x]) === 'function')
-			return `var ${x} = $.moe.globals.${x}.bind($.moe);`
-		else
-			return `var ${x} = $.moe.globals.${x};`
-	}.bind(this));
-
-	// Join all everything
-	var finalCode = `${globals.join('\n')}\n`;
-	finalCode += `return function(model, context) {\n`;
-	finalCode += `var scope = null;\n`;
+	// Compile it
+	var finalCode;
+	finalCode  = `var scope = null;\n`;
 	finalCode += `${code.join("")}\n`;
 	finalCode += `return \`${parts.join("")}\`\n`;
-	finalCode += `}\n`;
-
-	// Create a closure to wrap the template and the globals
-	var compiled = Function(['$'], finalCode);
-	var compiledFn = compiled(this.helpers);
+	var compiledFn = Function(['helpers', 'model', 'context'], finalCode);
 
 	// Stub function to setup model etc...
 	var fn = function(model, context)
 	{
-		// Store model while we process the template
+		// Store model and context while we process the template
 		// (in case helpers want to get to it)
 		var oldModel = this.currentModel;
 		var oldContext = this.currentContext;
@@ -329,7 +319,7 @@ MoeEngine.prototype.compile = function(template)
 		{
 			this.currentModel = model;
 			this.currentContext = context;
-			return compiledFn(model, context);
+			return compiledFn(this.helpers, model, context);
 		}
 		finally
 		{
@@ -338,11 +328,11 @@ MoeEngine.prototype.compile = function(template)
 		}
 	}.bind(this);
 
-	// Store the implementation (handy to for debug to see the actual implementation)
+	// Store the implementation function (handy to for debug to see the actual implementation)
 	// eg:
-	//   var template = moe("template text");
+	//   var template = moe.compileFileSync("template.moe");
 	//   console.log(template.impl.toString());
-	fn.impl = compiled;
+	fn.impl = compiledFn;
 
 	return fn;
 }
@@ -364,11 +354,12 @@ MoeEngine.prototype.compileFile = function(filename, encoding, cb)
 		filename += ".moe";
 	}
 
-
 	// Already compiled?
 	if (this.templates[filename])
 	{
-		cb(null, this.templates[filename]);
+		setImmediate(function() {
+			cb(null, this.templates[filename]);
+		}.bind(this));
 	}
 	else
 	{
@@ -555,7 +546,7 @@ function middleware(filename, options, cb)
 			if (err)
 				return cb(err);
 
-			// Attach the body to the options object
+			// Pass on the inner body
 			options.body = body;
 
 			// Run the layout
