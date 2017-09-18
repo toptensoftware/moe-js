@@ -472,7 +472,7 @@ MoeExpressHooks.prototype.resolveViewPath = function(name, viewFolders)
 		{
 			var file = path.resolve(viewFolders[i], name);
 			if (this.moe.templates[file])
-				return this.moe.templates[file];
+				return file;
 		}
 	}
 
