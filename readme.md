@@ -15,36 +15,45 @@ Moe.JS is a simple, but fast and flexible templating engine for JavaScript.
 
 Before executing a template, you must first compile it.  
 
-    // Import moe
-    const moe = require('moe-js');
+```Javascript
+// Import moe
+const moe = require('moe-js');
 
-    // Compile a template from a string
-    var template = moe.compile("<h1>{{model.title}}</h1>");
+// Compile a template from a string
+var template = moe.compile("<h1>{{model.title}}</h1>");
+```
 
 Or compile from a file (the template will be cached so subsequent calls will re-use the same template)
 
-    moe.compileFile("myTemplate.moe", "UTF8", function(err, template) {
+```Javascript
+moe.compileFile("myTemplate.moe", "UTF8", function(err, template) {
 
-    });
+});
+```
 
 Or, do it synchronously
 
-    var template = moe.compileFileSync("mytemplate.moe", "UTF8");
+```Javascript
+var template = moe.compileFileSync("mytemplate.moe", "UTF8");
+```
 
 Once you have a template, you can execute it:
 
-    var html = template({ name: "Hello, from Moe.JS"});
-    assert(html == "<h1>Hello, from Moe.JS</h1>")
-
+```Javascript
+var html = template({ name: "Hello, from Moe.JS"});
+assert(html == "<h1>Hello, from Moe.JS</h1>")
+```
 
 ## Express Integration
 
 You can use Moe.JS as a view engine in Express:
 
-    const moe = require('moe-js');
-    app.engine('moe', moe.express);
-    app.set('views', path.join(__dirname, 'views'));
-    app.set('view engine', 'moe');
+```Javascript
+const moe = require('moe-js');
+app.engine('moe', moe.express);
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'moe');
+```
 
 Now any view file with a `.moe` file extension will be rendered using Moe.JS.
 
@@ -57,29 +66,41 @@ follow shows how to write Moe.JS template.
 
 Moe.JS uses `{{` and `}}` to delimit expressions:
 
-    <p>10 + 20 = {{ 10 + 20 }}</p>
+```html
+<p>10 + 20 = {{ 10 + 20 }}</p>
+```
 
 Any valid JavaScript expression can be used:
 
-    <p>sin(0.5) = {{ Math.sin(0.5) }}</p>
+```html
+<p>sin(0.5) = {{ Math.sin(0.5) }}</p>
+```
 
 ### Escaped vs Non-Escaped Output
 
 Use of double braces will cause the rendered text to be HTML encoded:
 
-    <p>{{"<blah>"}}<p>
+```html
+<p>{{"<blah>"}}<p>
+```
 
 Would result in:
 
-    <p>&lt;blah&gt;</p>
+```html
+<p>&lt;blah&gt;</p>
+```
 
 Use triple braces to suppress escaping text:
 
-    <p>{{{"<br/>"}}}</p>
+```html
+<p>{{{"<br/>"}}}</p>
+```
 
 Would result in:
 
-    <p><br/></p>
+```html
+<p><br/></p>
+```
 
 ### The Special `model` Variable 
 
@@ -87,90 +108,110 @@ Data passed to the template is available as the `model` variable inside the temp
 
 eg: Suppose the template was invoked like so:
 
+```Javascript
     template({ title: "This is the title" });
+```
 
 Then the title property would be accessed as follows:
 
+```html
     <h1>{{model.title}}</h1>
+```
 
-(Unlike Mustache, `{{title}}` won't work.)
+(Unlike Mustache, `{{title}}` won't work - you must specify `model.``")
 
 ### Conditional Execution
 
-The {{#if}} / {{#else}} / {{/if}} directives are used to conditionally include sections:
+The `{{#if}}` / `{{#else}}` / `{{/if}}` directives are used to conditionally include sections:
 
-    {{#if model.quantity == 0}}
-    <p>OUT OF STOCK</p>
-    {{/if}}
+```html
+{{#if model.quantity == 0}}
+<p>OUT OF STOCK</p>
+{{/if}}
+```
 
 Else blocks can be marked as `{{#else}}` or `{{else}}` (for Mustache compatibility)
 
-    {{#if model.quantity == 0}}
-    <p>OUT OF STOCK</p>
-    {{#else}}
-    <P>IN STOCK</P>
-    {{/if}}
+```html
+{{#if model.quantity == 0}}
+<p>OUT OF STOCK</p>
+{{#else}}
+<P>IN STOCK</P>
+{{/if}}
+```
 
 ### Rendering Collections
 
-To loop over a collection of items, use the {{$each}} directive and the special variable `item`:
+To loop over a collection of items, use the `{{$each}}` directive and the special variable `item`:
 
-    {{#each ["apples", "pears", "bananas"]}}
-    <p>{{item}}</p>
-    {{/each}}
+```html
+{{#each ["apples", "pears", "bananas"]}}
+<p>{{item}}</p>
+{{/each}}
+```
 
 You can also specify a variable name for the item. This can be handy when working with nested loops.
 
-    {{#each u in Users}}
-    {{#each r in u.roles}}
-    <p>Name: {{u.name}} Email: {{r}}</p>
-    {{/each}}
-    {{/each}}
+```html
+{{#each u in Users}}
+{{#each r in u.roles}}
+<p>Name: {{u.name}} Role: {{r}}</p>
+{{/each}}
+{{/each}}
+```
 
 Inside the each statement, a special variable `scope` is also available:
 
-    {
-        index: 0,             // The index of the currently rendering item
-        item: 'Apples',       // The currently rendering item
-        items: ['Apples'],    // An array of all items being iterated
-        first: true,          // True if the current item is the first item
-        last: true,           // True if the current item is the last item
-        outer: {}             // Reference to the next outer loop scope (if nested looping)
-    }
+```Javascript
+{
+    index: 0,             // The index of the currently rendering item
+    item: 'Apples',       // The currently rendering item
+    items: ['Apples'],    // An array of all items being iterated
+    first: true,          // True if the current item is the first item
+    last: true,           // True if the current item is the last item
+    outer: {}             // Reference to the next outer loop scope (if nested looping)
+}
+```
 
 This lets you do things like:
 
-    {{#each User}}
-    {{#if scope.first}}<hr />{{/if}}
-    <p>item.name</p>
-    {{#if scope.last}}<p> -- END -- </p>{{/if}}
-    {{/each}}
+```html
+{{#each User}}
+{{#if scope.first}}<hr />{{/if}}
+<p>item.name</p>
+{{#if scope.last}}<p> -- END -- </p>{{/if}}
+{{/each}}
+```
 
-You can also do odd/even rendering with {{#if item.index % 2}} etc...
+You can also do odd/even rendering with `{{#if item.index % 2}}` etc...
 
-Each blocks can also have an else clause that will be rendered if the collection is empty:
+`{{#each}}` blocks can also have an `{{#else}}` clause that will be rendered if the collection is empty:
 
-    {{#each model.user}}
-    <p>item.name</p>
-    {{#else}}
-    <p>No Users Found :(</p>
-    {{/each}}
+```html
+{{#each model.user}}
+<p>item.name</p>
+{{#else}}
+<p>No Users Found :(</p>
+{{/each}}
+```
 
 ### Code Blocks
 
 Code blocks let you define local helper functions:
 
-    {{#code}}
-    function FormatPrice(val)
-    {
-        if (val == 0)
-            return "-";
-        else
-            return "$" + val.toFixed(2);
-    }
-    {{/code}}
+```html
+{{#code}}
+function FormatPrice(val)
+{
+    if (val == 0)
+        return "-";
+    else
+        return "$" + val.toFixed(2);
+}
+{{/code}}
 
-    {{FormatPrice(23.99)}}
+{{FormatPrice(23.99)}}
+```
 
 ### Partials
 
@@ -178,19 +219,26 @@ Partials let you embed the contents of another template inside this template:
 
 Invoke the UserDetails template, passing the current model as the model for the template.
 
-    {{> "UserDetails" }}
+```html
+{{> "UserDetails" }}
+```
 
 Note that unlike Mustache/Handlebars, the name of the partial template must be quoted because it's a JavaScript expression.  This also means you can do things like this which would render different templates for different user roles:
 
-    {{> "UserDetails_" + model.role }}
+```html
+{{> "UserDetails_" + model.role }}
+```
 
 Inside an `{{#each}}` block, the current loop item is passed as the model, so in this case the current user would be passed as the model to the partial template:
 
-    {{#each u in model.Users}}
-    {{> "UserDetails" }}
-    {{/each}}
+```html
+{{#each u in model.Users}}
+{{> "UserDetails" }}
+{{/each}}
+```
 
 You can also, pass an explicit object as the model to the partial template:
 
-    {{> "UserDetails", model.user}}
-
+```html
+{{> "UserDetails", model.user}}
+```
