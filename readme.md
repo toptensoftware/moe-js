@@ -129,7 +129,7 @@ Else blocks can be marked as `{{#else}}` or `{{else}}` (for Mustache compatibili
 
 ### Rendering Collections
 
-To loop over a collection of items, use the `{{$each}}` directive and the special variable `item`:
+To loop over a collection of items, use the `{{#each}}` directive and the special variable `item`:
 
 ```html
 {{#each ["apples", "pears", "bananas"]}}
@@ -197,7 +197,7 @@ function FormatPrice(val)
 }
 {{/code}}
 
-{{FormatPrice(23.99)}}
+<p>Item Price: {{FormatPrice(23.99)}}</p>
 ```
 
 ### Partials
@@ -267,11 +267,11 @@ function template(model [, context])
 ```
 
 * `model` is the data to be passed to the model
-* `context` is an option object that will be passed to the template and to any partials
+* `context` is an optional object that will be passed to the template and to any partials
 
 ### moe.compileFile
 
-The `compileFile` function loads a template from text file, compiles it use the `moe.compile` function and
+The `compileFile` function loads a template from text file, compiles it using the `moe.compile` function and
 stores the result in an internal cache.
 
 ```Javascript
@@ -304,7 +304,7 @@ function moe.compileFileSync(filename, encoding)
 ### moe.discardTemplateCache
 
 Discards the contents of the internal template cache.  Call this function if any of the template
-files have changed to force those templates to be re-read and re-compiled next time they're references.
+files have changed to force those templates to be re-read and re-compiled next time they're referenced.
 
 ```Javascript
 function moe.discardTemplateCache()
@@ -316,7 +316,7 @@ A set of functions and objects that are available to template scripts.  See belo
 
 ## Helper Functions
 
-You can write helper functions to be used in your templates by either declaring them inside the template using `{{#code}}` blocks, or by attaching functions to the `moe.helpers` object:
+You can write helper functions to be used in your templates by either declaring them inside the template using `{{#code}}` blocks (as described above), or by attaching functions to the `moe.helpers` object:
 
 ```Javascript
 var moe = require('moe-je');
@@ -352,7 +352,7 @@ app.engine('moe', moe.express(app));
 // Where to look for views
 app.set('views', path.join(__dirname, 'views'));
 
-// Default view engine when render call doesn't include file extension
+// Default view engine to use when render call doesn't include file extension
 app.set('view engine', 'moe');
 ```
 
@@ -367,12 +367,13 @@ The name of the layout is determined in the following way:
 2. The `app.locals.layout` property
 3. Defaults to "layout"
 
-To suppress the use of a layout set the property to `false`.
+To suppress the use of a layout set the property to `false`.  Layout files are searched for in the same
+directory as other views.
 
 On rendering the layout, the originally passed model will be decorated with a new property `body` containing
 the rendered content of the inner view.  
 
-A simple minimal template might look like this:
+A simple minimal layout might look like this:
 
 ```html
 <html>
@@ -388,16 +389,17 @@ A simple minimal template might look like this:
 
 ### The Context Object
 
-In addition to the `.model` object that is used to pass data to a template, a second special context object called the `.context`.  Unlike the model object which can change between templates and partials, the context object remains the same
+In addition to the `.model` object that is used to pass data to a template, there is a second special object called the `.context`.  Unlike the model object which can change between templates and partials, the context object remains the same
 across all templates used.
 
-The context object is optional and if used should be passed as the second parameter to the compiled template function.
+The context object is optional and if used should be passed as the second parameter to the compiled template function (see example below)
 
 ### Partial Template Resolution and Model Decoration Hooks
 
 By default when a partial template is referenced, the file is loaded directly from the current directory.  Since most
 integrations will want to look for partials in a particular location, the context object can contain a special `$moe` 
-member variable that can provide functions used to resolve the partial location.
+member variable that can provide functions used to resolve the partial location and to decorate the partials model object
+before the partial is rendered.
 
 These hooks are used by Moe.JS's Express integration to look for partials in the views subfolder and to 
 merge models with local settings.
@@ -408,7 +410,7 @@ var context =
     // Special member '$moe' provides hooks for partial processing
     $moe: 
     {
-        // Given a template name reference by a partial directive, map it to the actual path    
+        // Map a partial name to an actual file path    
         resolvePartialPath: function(partialTemplateName) {
             // Return the full path to the template file to use
             return path.join("./views/partialViews", partialTemplateName);
