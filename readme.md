@@ -4,10 +4,10 @@ Moe.JS is a simple, but fast and flexible templating engine for JavaScript.
 
 * Mustache/Handlebars inspired format
 * Compiles templates to ES6 template literals for super fast execution
-* Support for partials and outer layouts
+* Support for partials
 * Support for external helper functions
 * Support for embedded code blocks
-* Built-in Express integration
+* Built-in Express integration including support for outer "layouts"
 * Built-in template file cache
 * Simple to use
 
@@ -43,19 +43,6 @@ Once you have a template, you can execute it:
 var html = template({ name: "Hello, from Moe.JS"});
 assert(html == "<h1>Hello, from Moe.JS</h1>")
 ```
-
-## Express Integration
-
-You can use Moe.JS as a view engine in Express:
-
-```Javascript
-const moe = require('moe-js');
-app.engine('moe', moe.express);
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'moe');
-```
-
-Now any view file with a `.moe` file extension will be rendered using Moe.JS.
 
 ## Template Language
 
@@ -118,7 +105,7 @@ Then the title property would be accessed as follows:
     <h1>{{model.title}}</h1>
 ```
 
-(Unlike Mustache, `{{title}}` won't work - you must specify `model.``")
+(Unlike Mustache, `{{title}}` won't work - you must specify `model.`")
 
 ### Conditional Execution
 
@@ -242,3 +229,207 @@ You can also, pass an explicit object as the model to the partial template:
 ```html
 {{> "UserDetails", model.user}}
 ```
+
+
+## Helper Functions
+
+
+## API Reference
+
+When you import Moe.JS, the returned object the default instance of the MoeEngine class.  
+
+```Javascript
+    const moe = require('moe-js');
+```
+
+Although rarely necessary, you can create additional MoeEngine instances as follows:
+
+```Javascript
+    const moe = require('moe-js');
+    const moe2 = new moe.MoeEngine();
+```
+
+### moe.compile
+
+The `compile` function takes template string and compiles it to a function that can be invoked to
+render the template output:
+
+``` Javascript
+function moe.compile(templateScript)
+```
+
+* `templateScript` is a string containing the template to be compiled
+
+The returned function is of the following form:
+
+```Javascript
+function template(model [, context])
+```
+
+* `model` is the data to be passed to the model
+* `context` is an option object that will be passed to the template and to any partials
+
+### moe.compileFile
+
+The `compileFile` function loads a template from text file, compiles it use the `moe.compile` function and
+stores the result in an internal cache.
+
+```Javascript
+function moe.compileFile(filename, encoding, callback)
+```
+
+* `filename` is the file to compile.  If the file doesn't have an extension ".moe" will be automatically appended.
+* `encoding` the text encoding of the format (typical 'UTF8')
+* `callback` a function that will be called when the template has been compiled
+
+The callback function is a typical Node style callback:
+
+```Javascript
+function callback(err, template)
+```
+
+### moe.compileFileSync
+
+Synchronous version of the `moe.compileFile` function:
+
+```Javascript
+function moe.compileFileSync(filename, encoding)
+```
+
+* `filename` is the file to compile
+* `encoding` the text encoding of the format (typical 'UTF8')
+* returns the compiled template, or throws an exception
+
+
+### moe.discardTemplateCache
+
+Discards the contents of the internal template cache.  Call this function if any of the template
+files have changed to force those templates to be re-read and re-compiled next time they're references.
+
+```Javascript
+function moe.discardTemplateCache()
+```
+
+### moe.helpers
+
+A set of functions and objects that are available to template scripts.  See below...
+
+## Helper Functions
+
+You can write helper functions to be used in your templates by either declaring them inside the template using `{{#code}}` blocks, or by attaching functions to the `moe.helpers` object:
+
+```Javascript
+var moe = require('moe-je');
+moe.helpers.FormatPrice = function (val)
+{
+    if (val == 0)
+        return "-";
+    else
+        return "$" + val.toFixed(2);
+}
+```
+
+You can then reference these helper function in your template as follows:
+
+```html
+<p>Price: {{helpers.FormatPrice(item.price)}}</p>
+```
+
+Note that you should NOT replace the existing `.helpers` instance - it contains internal helper
+functions used by the generated template function.
+
+
+## Express Integration
+
+You can use Moe.JS as a view engine in Express:
+
+```Javascript
+const moe = require('moe-js');
+
+// Use Moe.JS for '.moe' view templates
+app.engine('moe', moe.express(app));
+
+// Where to look for views
+app.set('views', path.join(__dirname, 'views'));
+
+// Default view engine when render call doesn't include file extension
+app.set('view engine', 'moe');
+```
+
+### Outer Layout
+
+When using Moe.JS with Express, you can specify an outer layout file into which the internal view
+is wrapped.
+
+The name of the layout is determined in the following way:
+
+1. The `model.layout` property
+2. The `app.locals.layout` property
+3. Defaults to "layout"
+
+To suppress the use of a layout set the property to `false`.
+
+On rendering the layout, the originally passed model will be decorated with a new property `body` containing
+the rendered content of the inner view.  
+
+A simple minimal template might look like this:
+
+```html
+<html>
+<head>
+</head>
+<body>
+{{{ model.body }}}
+</body>
+</html>
+```
+
+## Internals
+
+### The Context Object
+
+In addition to the `.model` object that is used to pass data to a template, a second special context object called the `.context`.  Unlike the model object which can change between templates and partials, the context object remains the same
+across all templates used.
+
+The context object is optional and if used should be passed as the second parameter to the compiled template function.
+
+### Partial Template Resolution and Model Decoration Hooks
+
+By default when a partial template is referenced, the file is loaded directly from the current directory.  Since most
+integrations will want to look for partials in a particular location, the context object can contain a special `$moe` 
+member variable that can provide functions used to resolve the partial location.
+
+These hooks are used by Moe.JS's Express integration to look for partials in the views subfolder and to 
+merge models with local settings.
+
+```Javascript
+var context = 
+{
+    // Special member '$moe' provides hooks for partial processing
+    $moe: 
+    {
+        // Given a template name reference by a partial directive, map it to the actual path    
+        resolvePartialPath: function(partialTemplateName) {
+            // Return the full path to the template file to use
+            return path.join("./views/partialViews", partialTemplateName);
+        },
+
+        // Provides an opportunity to "decorate" the a model object before it's
+        // passed to a partial.
+        decoratePartialModel: function(model) {
+            // Return either the original object modified, or a new object
+            // merged with the original model.
+            return merge({
+                "someCustomSettingsForThePartial": "Whatever",
+                "somethingElse": 99
+            }, model);
+        }
+    }  
+};
+
+var template = moe.compile(templateText);
+var model = { }
+var text = template(mode, context);     // NB: passing the context object
+
+```
+

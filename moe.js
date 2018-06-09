@@ -99,11 +99,14 @@ function MoeEngine()
 {
 	this.helpers = new MoeHelpers(this);
 	this.templates = {};
-	this.__express = middleware.bind(this);
-	this.express = this.__express;
 	this.currentModel = null;
 	this.currentContext = null;
 	this.shouldPassLocals = false;
+}
+
+MoeEngine.prototype.express(app)
+{
+	return ExpressMiddleware(this, app);
 }
 
 // Compile a string template, returns a function(model, context)
@@ -405,19 +408,14 @@ MoeEngine.prototype.compileFileSync = function(filename, encoding)
 	return compiled;
 }
 
-MoeEngine.prototype.passLocalsToPartials = function(app)
-{
-	this.shouldPassLocals = true;
-	this.app = app;
-}
-
 
 //////////////////////////////////////////////////////////////////////////////////
 // Express integration
 
-function MoeExpressHooks(moe, options)
+function MoeExpressHooks(moe, app, options)
 {
 	this.moe = moe;
+	this.app = app;
 	this.options = options;
 }
 
@@ -435,9 +433,9 @@ MoeExpressHooks.prototype.decoratePartialModel = function(model)
 	};
 
 	// Merge app locals
-	if (this.moe.app)
+	if (this.app)
 	{
-		merge(temp, this.moe.app.locals);
+		merge(temp, this.app.locals);
 	}
 
 	// Merge request locals
@@ -505,58 +503,61 @@ MoeExpressHooks.prototype.resolvePartialPath = function(name)
 
 
 // Express middleware to render a view
-function middleware(filename, options, cb)
+function ExpressMiddleware(moe, app)
 {
-	// Don't cache templates during development
-	if (!options.cache)
+	return function middleware(filename, options, cb)
 	{
-		this.discardTemplateCache();
-	}
+		// Don't cache templates during development
+		if (!options.cache)
+		{
+			moe.discardTemplateCache();
+		}
 
-	// Setup hooks to resolve partial paths and decorate
-	// sub-models before passing to partials
-	var context = {
-		$moe: new MoeExpressHooks(this, options),
-	};
+		// Setup hooks to resolve partial paths and decorate
+		// sub-models before passing to partials
+		var context = {
+			$moe: new MoeExpressHooks(moe, app, options),
+		};
 
-	// Compile and run!
-	this.compileFile(filename, 'UTF8', function(err, template) {
-
-		// Error
-		if (err)
-			return cb(err);	
-
-		// Process the body
-		var body = template(options, context);
-
-		// Work out the layout file
-		var layout = options.layout;
-		if (layout === undefined && options.settings && options.settings['view options'])
-			layout = options.settings['view options'].layout;
-		if (layout === undefined)
-			layout = "layout";
-
-		// No layout?
-		if (!layout)
-			return cb(null, body);
-
-		// Find the layout file
-		var layoutFile = context.$moe.resolveViewPath(layout, options.settings.views);
-		this.compileFile(layoutFile, 'UTF8', function(err, templateLayout) {
+		// Compile and run!
+		moe.compileFile(filename, 'UTF8', function(err, template) {
 
 			// Error
 			if (err)
-				return cb(err);
+				return cb(err);	
 
-			// Pass on the inner body
-			options.body = body;
+			// Process the body
+			var body = template(options, context);
 
-			// Run the layout
-			cb(null, templateLayout(options, context));
+			// Work out the layout file
+			var layout = options.layout;
+			if (layout === undefined && options.settings && options.settings['view options'])
+				layout = options.settings['view options'].layout;
+			if (layout === undefined)
+				layout = "layout";
 
-		});
+			// No layout?
+			if (!layout)
+				return cb(null, body);
 
-	}.bind(this));
+			// Find the layout file
+			var layoutFile = context.$moe.resolveViewPath(layout, options.settings.views);
+			moe.compileFile(layoutFile, 'UTF8', function(err, templateLayout) {
+
+				// Error
+				if (err)
+					return cb(err);
+
+				// Pass on the inner body
+				options.body = body;
+
+				// Run the layout
+				cb(null, templateLayout(options, context));
+
+			});
+
+		};
+	}
 }
 
 
