@@ -37,7 +37,18 @@ MoeHelpers.prototype.each = function(outerScope, iter, cbItem, cbEmpty)
 	if (iter)
 	{
 		// Get all items into an array
-		scope.items = Array.isArray(iter) ? iter : Array.from(iter);
+		if (isIterable(iter))
+		{
+			scope.items = Array.isArray(iter) ? iter : Array.from(iter);
+		}
+		else if (isObject(iter))
+		{
+			scope.items = Object.keys(iter).map(k => { return { key:k, value:iter[k] } } )
+		}
+		else
+		{
+			scope.items = [iter];
+		}
 
 		// If any items process them
 		if (scope.items.length)
@@ -577,7 +588,15 @@ function merge(a, b)
 	return a;
 }
 
+function isObject(val)
+{
+	return val != null && typeof val === 'object' && Array.isArray(val) === false
+}
 
+function isIterable(val)
+{
+	return val != null && typeof val[Symbol.iterator] === 'function';
+}
 
 //////////////////////////////////////////////////////////////////////////////////
 // Exports

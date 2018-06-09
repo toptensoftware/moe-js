@@ -47,7 +47,7 @@ assert(html == "<h1>Hello, from Moe.JS</h1>")
 ## Template Language
 
 Moe.JS templates are similar to Mustache/Handlebars templates, but there are some important differences.  The
-follow shows how to write Moe.JS template.
+following shows how to write Moe.JS template.
 
 ### Use `{{}}` to Embed Expressions
 
@@ -65,7 +65,7 @@ Any valid JavaScript expression can be used:
 
 ### Escaped vs Non-Escaped Output
 
-Use of double braces will cause the rendered text to be HTML encoded:
+Double braces causse the rendered text to be HTML encoded:
 
 ```html
 <p>{{"<blah>"}}<p>
@@ -77,7 +77,7 @@ Would result in:
 <p>&lt;blah&gt;</p>
 ```
 
-Use triple braces to suppress escaping text:
+Use triple braces to suppress encoding:
 
 ```html
 <p>{{{"<br/>"}}}</p>
@@ -91,7 +91,7 @@ Would result in:
 
 ### The Special `model` Variable 
 
-Data passed to the template is available as the `model` variable inside the template:
+Data passed to the template is available as the special `model` variable inside the template:
 
 eg: Suppose the template was invoked like so:
 
@@ -99,13 +99,13 @@ eg: Suppose the template was invoked like so:
     template({ title: "This is the title" });
 ```
 
-Then the title property would be accessed as follows:
+Inside the template, the model properties would be accessed as follows:
 
 ```html
     <h1>{{model.title}}</h1>
 ```
 
-(Unlike Mustache, `{{title}}` won't work - you must specify `model.`")
+(Unlike Mustache, `{{title}}` won't work, you must specify `model.`")
 
 ### Conditional Execution
 
@@ -140,20 +140,33 @@ To loop over a collection of items, use the `{{#each}}` directive and the specia
 You can also specify a variable name for the item. This can be handy when working with nested loops.
 
 ```html
-{{#each u in Users}}
+{{#each u in model.Users}}
 {{#each r in u.roles}}
 <p>Name: {{u.name}} Role: {{r}}</p>
 {{/each}}
 {{/each}}
 ```
 
-Inside the each statement, a special variable `scope` is also available:
+When iterating over an object, the loop variable has two properties `.key` and `.value`:
+
+```html
+{{#each fruit in { "apples": "red", "bananas": "yellow" } }}
+<p>Fruit: {{fruit.key}} Color: {{fruit.value}}
+{{/each}}
+<p>
+```
+
+Inside the `{{#each}}` statement, a special variable `scope` is also available:
 
 ```Javascript
 {
     index: 0,             // The index of the currently rendering item
     item: 'Apples',       // The currently rendering item
-    items: ['Apples'],    // An array of all items being iterated
+    items: [              // An array of all items being iterated
+        'Apples',
+        'Pears',
+        'Bananas',
+    ],    
     first: true,          // True if the current item is the first item
     last: true,           // True if the current item is the last item
     outer: {}             // Reference to the next outer loop scope (if nested looping)
