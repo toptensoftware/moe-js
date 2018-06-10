@@ -10,5 +10,9 @@
 		"url": "https://bitbucket.org/toptensoftware/moe-js"
 	},
 	"homepage": "http://www.toptensoftware.com/moe-js",
-	"keywords": [ "express", "view engine", "template" ]
+	"keywords": [
+		"express",
+		"view engine",
+		"template"
+	]
 }

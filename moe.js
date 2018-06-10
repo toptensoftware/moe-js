@@ -115,7 +115,7 @@ function MoeEngine()
 	this.shouldPassLocals = false;
 }
 
-MoeEngine.prototype.express(app)
+MoeEngine.prototype.express = function(app)
 {
 	return ExpressMiddleware(this, app);
 }
@@ -567,7 +567,7 @@ function ExpressMiddleware(moe, app)
 
 			});
 
-		};
+		});
 	}
 }
 

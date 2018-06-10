@@ -223,7 +223,7 @@ Invoke the UserDetails template, passing the current model as the model for the 
 {{> "UserDetails" }}
 ```
 
-Note that unlike Mustache/Handlebars, the name of the partial template must be quoted because it's a JavaScript expression.  This also means you can do things like this which would render different templates for different user roles:
+Note that unlike Mustache/Handlebars, the name of the partial template must be quoted because it's a JavaScript expression.  This also means you can dynamically synthesize the name of the partial to invoke:
 
 ```html
 {{> "UserDetails_" + model.role }}
@@ -249,7 +249,7 @@ You can also, pass an explicit object as the model to the partial template:
 
 ## API Reference
 
-When you import Moe.JS, the returned object the default instance of the MoeEngine class.  
+When you import Moe.JS, the returned object is the default instance of the MoeEngine class.  
 
 ```Javascript
     const moe = require('moe-js');
