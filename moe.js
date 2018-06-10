@@ -26,6 +26,8 @@ MoeHelpers.prototype.encode = function(str)
 	});
 }
 
+
+
 // Helper to iterate an iterable or call an alternate if iterable is empty
 MoeHelpers.prototype.each = function(outerScope, iter, cbItem, cbEmpty)
 {
@@ -44,6 +46,12 @@ MoeHelpers.prototype.each = function(outerScope, iter, cbItem, cbEmpty)
 		else if (isObject(iter))
 		{
 			scope.items = Object.keys(iter).map(k => { return { key:k, value:iter[k] } } )
+		}
+		else if (isGeneratorFunction(iter))
+		{
+			scope.items = [];
+			for (var i of iter())
+				scope.items.push(i);
 		}
 		else
 		{
@@ -168,6 +176,8 @@ MoeEngine.prototype.compile = function(template)
 		// Allow handlebars style {{else}}
 		if (directive == "else")
 			directive = "#else";
+		if (directive == "elseif")
+			directive = "#elseif";
 
 		// Closing tag?
 		if (directive[0]=='/')
@@ -255,7 +265,7 @@ MoeEngine.prototype.compile = function(template)
 					var itemName = "item";
 					if (exprParts.length > 2 && exprParts[1] == 'in')
 					{
-						expr = filters.slice(2).join(' ');
+						expr = exprParts.slice(2).join(' ');
 						itemName = exprParts[0];
 					}
 
@@ -278,6 +288,17 @@ MoeEngine.prototype.compile = function(template)
 					}
 					else
 						throw new Error(`Unexpected else directive`);
+					break;
+
+				case "elseif":
+					if (blockType == "if")
+					{
+						parts.push("`; } else if (")
+						parts.push(expr)
+						parts.push(") { return `");
+					}
+					else
+						throw new Error(`Unexpected elseif directive`);
 					break;
 
 				default:
@@ -596,6 +617,13 @@ function isObject(val)
 function isIterable(val)
 {
 	return val != null && typeof val[Symbol.iterator] === 'function';
+}
+
+const GeneratorFunction = (function*(){}).constructor
+
+function isGeneratorFunction(val)
+{
+	return val instanceof GeneratorFunction
 }
 
 //////////////////////////////////////////////////////////////////////////////////

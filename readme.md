@@ -127,6 +127,19 @@ Else blocks can be marked as `{{#else}}` or `{{else}}` (for Mustache compatibili
 {{/if}}
 ```
 
+There's also an `{{#elseif}}` directive:
+
+```html
+{{#if model.quantity == 0}}
+<p>OUT OF STOCK</p>
+{{#elseif model.quantity < 3}}
+<p>ALMOST OUT OF STOCK</p>
+{{#else}}
+<P>IN STOCK</P>
+{{/if}}
+```
+
+
 ### Rendering Collections
 
 To loop over a collection of items, use the `{{#each}}` directive and the special variable `item`:

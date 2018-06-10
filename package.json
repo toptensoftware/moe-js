@@ -14,5 +14,11 @@
 		"express",
 		"view engine",
 		"template"
-	]
+	],
+	"scripts": {
+		"test": "node_modules/.bin/jest"
+	},
+	"devDependencies": {
+		"jest": "^23.1.0"
+	}
 }
