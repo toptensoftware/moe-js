@@ -1,4 +1,4 @@
-# Welcome to Moe.JS
+## Welcome to Moe.JS
 
 Moe.JS is a simple, but fast and flexible templating engine for JavaScript.
 
