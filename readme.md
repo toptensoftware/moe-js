@@ -63,45 +63,45 @@ assert(html == "<h1>Hello, from moe-js</h1>")
 ## Template Language
 
 moe-js templates are similar to Mustache/Handlebars templates, but there are some important differences.  The
-following shows how to write moe-js template.
+following shows how to write moe-js templates.
 
 ### Use `{{}}` to Embed Expressions
 
 moe-js uses `{{` and `}}` to delimit expressions:
 
-```html
+```handlebars
 <p>10 + 20 = {{ 10 + 20 }}</p>
 ```
 
 Any valid JavaScript expression can be used:
 
-```html
+```handlebars
 <p>sin(0.5) = {{ Math.sin(0.5) }}</p>
 ```
 
 ### Escaped vs Non-Escaped Output
 
-Double braces causse the rendered text to be HTML encoded:
+Double braces cause the rendered text to be HTML encoded:
 
-```html
+```handlebars
 <p>{{"<blah>"}}<p>
 ```
 
 Would result in:
 
-```html
+```handlebars
 <p>&lt;blah&gt;</p>
 ```
 
 Use triple braces to suppress encoding:
 
-```html
+```handlebars
 <p>{{{"<br/>"}}}</p>
 ```
 
 Would result in:
 
-```html
+```handlebars
 <p><br/></p>
 ```
 
@@ -117,7 +117,7 @@ eg: Suppose the template was invoked like so:
 
 Inside the template, the model properties would be accessed as follows:
 
-```html
+```handlebars
     <h1>{{model.title}}</h1>
 ```
 
@@ -127,7 +127,7 @@ Inside the template, the model properties would be accessed as follows:
 
 The `{{#if}}` / `{{#else}}` / `{{/if}}` directives are used to conditionally include sections:
 
-```html
+```handlebars
 {{#if model.quantity == 0}}
 <p>OUT OF STOCK</p>
 {{/if}}
@@ -135,7 +135,7 @@ The `{{#if}}` / `{{#else}}` / `{{/if}}` directives are used to conditionally inc
 
 Else blocks can be marked as `{{#else}}` or `{{else}}` (for Mustache compatibility)
 
-```html
+```handlebars
 {{#if model.quantity == 0}}
 <p>OUT OF STOCK</p>
 {{#else}}
@@ -145,7 +145,7 @@ Else blocks can be marked as `{{#else}}` or `{{else}}` (for Mustache compatibili
 
 There's also an `{{#elseif}}` directive:
 
-```html
+```handlebars
 {{#if model.quantity == 0}}
 <p>OUT OF STOCK</p>
 {{#elseif model.quantity < 3}}
@@ -160,7 +160,7 @@ There's also an `{{#elseif}}` directive:
 
 To loop over a collection of items, use the `{{#each}}` directive and the special variable `item`:
 
-```html
+```handlebars
 {{#each ["apples", "pears", "bananas"]}}
 <p>{{item}}</p>
 {{/each}}
@@ -168,7 +168,7 @@ To loop over a collection of items, use the `{{#each}}` directive and the specia
 
 You can also specify a variable name for the item. This can be handy when working with nested loops.
 
-```html
+```handlebars
 {{#each u in model.Users}}
 {{#each r in u.roles}}
 <p>Name: {{u.name}} Role: {{r}}</p>
@@ -178,7 +178,7 @@ You can also specify a variable name for the item. This can be handy when workin
 
 When iterating over an object, the loop variable has two properties `.key` and `.value`:
 
-```html
+```handlebars
 {{#each fruit in { "apples": "red", "bananas": "yellow" } }}
 <p>Fruit: {{fruit.key}} Color: {{fruit.value}}
 {{/each}}
@@ -204,7 +204,7 @@ Inside the `{{#each}}` statement, a special variable `scope` is also available:
 
 This lets you do things like:
 
-```html
+```handlebars
 {{#each User}}
 {{#if scope.first}}<hr />{{/if}}
 <p>item.name</p>
@@ -216,7 +216,7 @@ You can also do odd/even rendering with `{{#if item.index % 2}}` etc...
 
 `{{#each}}` blocks can also have an `{{#else}}` clause that will be rendered if the collection is empty:
 
-```html
+```handlebars
 {{#each model.user}}
 <p>item.name</p>
 {{#else}}
@@ -228,7 +228,7 @@ You can also do odd/even rendering with `{{#if item.index % 2}}` etc...
 
 Code blocks let you define local helper functions:
 
-```html
+```handlebars
 {{#code}}
 function FormatPrice(val)
 {
@@ -248,19 +248,19 @@ Partials let you embed the contents of another template inside this template:
 
 Invoke the UserDetails template, passing the current model as the model for the template.
 
-```html
+```handlebars
 {{> "UserDetails" }}
 ```
 
 Note that unlike Mustache/Handlebars, the name of the partial template must be quoted because it's a JavaScript expression.  This also means you can dynamically synthesize the name of the partial to invoke:
 
-```html
+```handlebars
 {{> "UserDetails_" + model.role }}
 ```
 
 Inside an `{{#each}}` block, the current loop item is passed as the model, so in this case the current user would be passed as the model to the partial template:
 
-```html
+```handlebars
 {{#each u in model.Users}}
 {{> "UserDetails" }}
 {{/each}}
@@ -268,7 +268,7 @@ Inside an `{{#each}}` block, the current loop item is passed as the model, so in
 
 You can also, pass an explicit object as the model to the partial template:
 
-```html
+```handlebars
 {{> "UserDetails", model.user}}
 ```
 
@@ -369,7 +369,7 @@ moe.helpers.FormatPrice = function (val)
 
 You can then reference these helper function in your template as follows:
 
-```html
+```handlebars
 <p>Price: {{helpers.FormatPrice(item.price)}}</p>
 ```
 
@@ -413,7 +413,7 @@ the rendered content of the inner view.
 
 A simple minimal layout might look like this:
 
-```html
+```handlebars
 <html>
 <head>
 </head>
