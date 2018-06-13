@@ -155,6 +155,18 @@ There's also an `{{#elseif}}` directive:
 {{/if}}
 ```
 
+As an alternative for `{{#else}}` and `{{#elseif}}` you can use `{{^}}` and `{{^if}}`:
+
+```html
+{{#if model.quantity == 0}}
+<p>OUT OF STOCK</p>
+{{^if model.quantity < 3}}
+<p>ALMOST OUT OF STOCK</p>
+{{^}}
+<P>IN STOCK</P>
+{{/if}}
+```
+
 moe.js doesn't really need an `{{#unless}}` block (because it's easy to just use `{{#if !(expr)}}`) but
 includes one anyway:
 

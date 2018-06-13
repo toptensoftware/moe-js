@@ -108,6 +108,25 @@ test("If/Else Block (false)", () => {
     expect(result).toMatch(/FALSE/);
 });
 
+test("If/Else Block (using ^)", () => {
+
+    var template = moe.compile(`
+    {{#if model.x}}
+    TRUE
+    {{^}}
+    FALSE
+    {{/if}}
+    `);
+    
+    var result = template({ 
+        x: true 
+    });
+
+    expect(result).toMatch(/TRUE/);
+});
+
+
+
 
 test("If/ElseIf Block (true)", () => {
 
@@ -145,6 +164,24 @@ test("If/ElseIf Block (false, true)", () => {
     expect(result).toMatch(/ONE/);
 });
 
+
+test("If/ElseIf Block (using ^if)", () => {
+
+    var template = moe.compile(`
+    {{#if model.x == 0}}
+    ZERO
+    {{^if model.x == 1}}
+    ONE
+    {{/if}}
+    `);
+    
+    var result = template({ 
+        x: 0
+    });
+
+    expect(result).toMatch(/ZERO/);
+    expect(result).not.toMatch(/ONE/);
+});
 
 test("If/ElseIf Block (0)", () => {
 
@@ -429,5 +466,42 @@ test("With Block (unnamed item)", () => {
     });
 
     expect(result).toMatch(/Apple - Red/);
+
+});
+
+test("With/Else Block (true)", () => {
+    var template = moe.compile(`
+    {{#with model.obj}}
+    <p>{{item.name}} - {{item.color}}</p>
+    {{#else}}
+    <p>FALSE</p>
+    {{/with}}
+    `);
+    
+    var result = template({ 
+        obj: {
+            name: "Apple",
+            color: "Red",
+        }
+    });
+
+    expect(result).toMatch(/Apple - Red/);
+
+});
+
+test("With/Else Block (false)", () => {
+    var template = moe.compile(`
+    {{#with model.obj}}
+    <p>{{item.name}} - {{item.color}}</p>
+    {{#else}}
+    <p>FALSE</p>
+    {{/with}}
+    `);
+    
+    var result = template({ 
+        obj: null
+    });
+
+    expect(result).toMatch(/FALSE/);
 
 });

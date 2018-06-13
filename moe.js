@@ -77,9 +77,12 @@ MoeHelpers.prototype.each = function(outerScope, iter, cbItem, cbEmpty)
 }
 
 // Helper to iterate an iterable or call an alternate if iterable is empty
-MoeHelpers.prototype.with = function(expr, cbItem)
+MoeHelpers.prototype.with = function(expr, cbItem, cbElse)
 {
-	return cbItem(expr);
+	if (expr)
+		return cbItem(expr);
+	else if (cbElse)
+		return cbElse();
 }
 
 
@@ -181,10 +184,12 @@ MoeEngine.prototype.compile = function(template)
 		directive = directive.substr(2, directive.length - 4).trim();
 
 		// Allow handlebars style {{else}}
-		if (directive == "else")
+		if (directive == "else" || directive == "^")
 			directive = "#else";
-		if (directive == "elseif")
-			directive = "#elseif";
+		if (directive.startsWith("elseif "))
+			directive = "#" + directive;
+		if (directive.startsWith("^if "))
+			directive = "#elseif " + directive.substr(4);
 
 		// Closing tag?
 		if (directive[0]=='/')
@@ -204,6 +209,8 @@ MoeEngine.prototype.compile = function(template)
 				expectedCloseTag = "if";
 			if (expectedCloseTag == "eachelse")
 				expectedCloseTag = "each";
+			if (expectedCloseTag == "withelse")
+				expectedCloseTag = "with";
 
 			// Check block type matches
 			if (closeTag != expectedCloseTag)
@@ -236,6 +243,7 @@ MoeEngine.prototype.compile = function(template)
 					break;
 
 				case "with":
+				case "withelse":
 					parts.push("`;})}");
 					break;
 				}
@@ -323,6 +331,11 @@ MoeEngine.prototype.compile = function(template)
 						blockTypeStack[blockTypeStack.length -1 ] = "eachelse";
 						parts.push("`;}, function(item) { return `");
 					}
+					else if (blockType == "with")
+					{
+						blockTypeStack[blockTypeStack.length -1 ] = "withelse";
+						parts.push("`;}, function() { return `");
+					}
 					else
 						throw new Error(`Unexpected else directive`);
 					break;
@@ -381,7 +394,6 @@ MoeEngine.prototype.compile = function(template)
 	finalCode += `var $encode = helpers.encode;\n`;
 	finalCode += `${code.join("")}\n`;
 	finalCode += `return \`${parts.join("")}\`\n`;
-
 	var compiledFn = Function(['helpers', 'model', 'context'], finalCode);
 
 	// Stub function to setup model etc...
