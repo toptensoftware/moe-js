@@ -270,6 +270,19 @@ To specify the name of the variable inside use `as`, like so:
 {{/with}}
 ```
 
+The contents of a `{{#with}}` block only render if the expression evaluates to a "truthy" value, and
+they can have an optional `{{#else}}` block:
+
+```html
+{{#with comment as model.user.post[33].comments[1]}}
+<p>{{comment.text}}</p>
+<p>Posted at: {{comment.time}}</p>
+{{#else}}
+<p>No Comment</p>
+{{/with}}
+```
+
+
 ### Code Blocks
 
 Code blocks let you define local helper functions:
