@@ -256,10 +256,6 @@ You can also, pass an explicit object as the model to the partial template:
 {{> "UserDetails", model.user}}
 ```
 
-
-## Helper Functions
-
-
 ## API Reference
 
 When you import Moe.JS, the returned object is the default instance of the MoeEngine class.  
