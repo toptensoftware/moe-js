@@ -155,6 +155,17 @@ There's also an `{{#elseif}}` directive:
 {{/if}}
 ```
 
+moe.js doesn't really need an `{{#unless}}` block (because it's easy to just use `{{#if !(expr)}}`) but
+includes one anyway:
+
+```html
+{{#unless model.newUser}}
+<p>User ID: {{model.user.id}}</p>
+{{/unless}}
+```
+
+An `{{#unless}}` block can't have an `{{#else}}` block.
+
 
 ### Rendering Collections
 
@@ -222,6 +233,29 @@ You can also do odd/even rendering with `{{#if item.index % 2}}` etc...
 {{#else}}
 <p>No Users Found :(</p>
 {{/each}}
+```
+
+### With Blocks
+
+`{{#with}}` blocks can be used to evaluate an expression and then generate a template block
+using the result of the expression.
+
+If not specified, the expression gets assigned to a variable named `item`:
+
+```html
+{{#with model.user.post[33].comments[1]}}
+<p>{{item.text}}</p>
+<p>Posted at: {{item.time}}</p>
+{{/with}}
+```
+
+To specify the name of the variable inside use `as`, like so:
+
+```html
+{{#with comment as model.user.post[33].comments[1]}}
+<p>{{comment.text}}</p>
+<p>Posted at: {{comment.time}}</p>
+{{/with}}
 ```
 
 ### Code Blocks

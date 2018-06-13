@@ -76,6 +76,13 @@ MoeHelpers.prototype.each = function(outerScope, iter, cbItem, cbEmpty)
 	return cbEmpty(scope, undefined);
 }
 
+// Helper to iterate an iterable or call an alternate if iterable is empty
+MoeHelpers.prototype.with = function(expr, cbItem)
+{
+	return cbItem(expr);
+}
+
+
 // Render a partial
 MoeHelpers.prototype.partial = function(model, context, scope, name, subModel)
 {
@@ -212,6 +219,7 @@ MoeEngine.prototype.compile = function(template)
 					break;
 
 				case "if":
+				case "unless":
 					parts.push("`; } else return ''; })()}");
 					break;
 
@@ -226,7 +234,11 @@ MoeEngine.prototype.compile = function(template)
 				case "eachelse":
 					parts.push("`;})}");
 					break;
-			}
+
+				case "with":
+					parts.push("`;})}");
+					break;
+				}
 
 			// Pop stack
 			blockTypeStack.pop();
@@ -258,6 +270,13 @@ MoeEngine.prototype.compile = function(template)
 					parts.push(") { return `");
 					break;
 
+				case "unless":
+					blockTypeStack.push("unless");
+					parts.push("${(function() { if (!(");
+					parts.push(expr);
+					parts.push(")) { return `");
+					break;
+
 				case "each":
 					// Handle {{#each <controlVal> in <expr>}}
 					//   (vs) {{#each <expr>}}
@@ -274,6 +293,24 @@ MoeEngine.prototype.compile = function(template)
 					parts.push(expr);
 					parts.push(`, function(scope, ${itemName}) { return \``);
 					break;
+
+				case "with":
+					// Handle {{#with <controlVal> as <expr>}}
+					//   (vs) {{#with <expr>}}
+					var exprParts = expr.split(/[\s\t]+/);
+					var itemName = "item";
+					if (exprParts.length > 2 && exprParts[1] == 'as')
+					{
+						expr = exprParts.slice(2).join(' ');
+						itemName = exprParts[0];
+					}
+
+					blockTypeStack.push("with");
+					parts.push("${helpers.with(");
+					parts.push(expr);
+					parts.push(`, function(${itemName}) { return \``);
+					break;
+					
 
 				case "else":
 					if (blockType == "if")
@@ -315,7 +352,7 @@ MoeEngine.prototype.compile = function(template)
 		else
 		{
 			// Encoded string output
-			parts.push("${helpers.encode(");
+			parts.push("${$encode(");
 			parts.push(directive);
 			parts.push(")}");
 		}
@@ -341,8 +378,10 @@ MoeEngine.prototype.compile = function(template)
 	// Compile it
 	var finalCode;
 	finalCode  = `var scope = null;\n`;
+	finalCode += `var $encode = helpers.encode;\n`;
 	finalCode += `${code.join("")}\n`;
 	finalCode += `return \`${parts.join("")}\`\n`;
+
 	var compiledFn = Function(['helpers', 'model', 'context'], finalCode);
 
 	// Stub function to setup model etc...

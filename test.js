@@ -43,6 +43,37 @@ test("If Block (false)", () => {
     expect(result).not.toMatch(/TRUE/);
 });
 
+test("Unless Block (true)", () => {
+
+    var template = moe.compile(`
+    {{#unless model.x}}
+    TRUE
+    {{/unless}}
+    `);
+    
+    var result = template({ 
+        x: true 
+    });
+
+    expect(result).not.toMatch(/TRUE/);
+});
+
+
+test("Unless Block (false)", () => {
+
+    var template = moe.compile(`
+    {{#unless model.x}}
+    TRUE
+    {{/unless}}
+    `);
+    
+    var result = template({ 
+        x: false 
+    });
+
+    expect(result).toMatch(/TRUE/);
+});
+
 test("If/Else Block (true)", () => {
 
     var template = moe.compile(`
@@ -363,4 +394,40 @@ test("Code Block", () => {
     });
 
     expect(result).toMatch(/##\$13.00##/);
+});
+
+test("With Block (named item)", () => {
+    var template = moe.compile(`
+    {{#with x as model.obj}}
+    <p>{{x.name}} - {{x.color}}</p>
+    {{/with}}
+    `);
+    
+    var result = template({ 
+        obj: {
+            name: "Apple",
+            color: "Red",
+        }
+    });
+
+    expect(result).toMatch(/Apple - Red/);
+
+});
+
+test("With Block (unnamed item)", () => {
+    var template = moe.compile(`
+    {{#with model.obj}}
+    <p>{{item.name}} - {{item.color}}</p>
+    {{/with}}
+    `);
+    
+    var result = template({ 
+        obj: {
+            name: "Apple",
+            color: "Red",
+        }
+    });
+
+    expect(result).toMatch(/Apple - Red/);
+
 });
