@@ -1,15 +1,31 @@
-## Welcome to Moe-js
+## Welcome to moe-js
 
-Moe-js is a simple, but fast and flexible templating engine for JavaScript.
+"moe-js" is a simple, fast, flexible, modern Mustache inspired templating engine for JavaScript.
 
 * Mustache/Handlebars inspired format
-* Compiles templates to ES6 template literals for super fast execution
-* Support for partials
-* Support for external helper functions
+* Compiles templates to ES6 template literals for fast execution
+* Support for in-template JavaScript expressions
 * Support for embedded code blocks
+* Support for external helper functions
+* Support for partials
 * Built-in Express integration including support for outer "layouts"
 * Built-in template file cache
 * Simple to use
+* No dependencies
+
+## Background
+
+moe-js was born out of frustration with Mustache - in particular with the
+awkward helper methods model and the lack of support for even simple expressions
+within the template. moe-js provides a way to "power-up" an existing set of Mustache templates 
+without having to rewrite them from scratch.
+
+With moe-js, you get a similar syntax but all the power of JavaScript within the template.  Unlike
+Mustache which is language agnostic, moe-js is unshamedly tied to JavaScript.
+
+moe-js doesn't claim to be compatible with Mustache but the syntax is very similar and existing
+templates can be converted fairly easily (certainly *alot* more easily than switching
+to a completely different view engine).
 
 ## Basic Usage
 
@@ -40,18 +56,18 @@ var template = moe.compileFileSync("mytemplate.moe", "UTF8");
 Once you have a template, you can execute it:
 
 ```Javascript
-var html = template({ name: "Hello, from Moe-js"});
-assert(html == "<h1>Hello, from Moe-js</h1>")
+var html = template({ name: "Hello, from moe-js"});
+assert(html == "<h1>Hello, from moe-js</h1>")
 ```
 
 ## Template Language
 
-Moe-js templates are similar to Mustache/Handlebars templates, but there are some important differences.  The
-following shows how to write Moe-js template.
+moe-js templates are similar to Mustache/Handlebars templates, but there are some important differences.  The
+following shows how to write moe-js template.
 
 ### Use `{{}}` to Embed Expressions
 
-Moe-js uses `{{` and `}}` to delimit expressions:
+moe-js uses `{{` and `}}` to delimit expressions:
 
 ```html
 <p>10 + 20 = {{ 10 + 20 }}</p>
@@ -258,7 +274,7 @@ You can also, pass an explicit object as the model to the partial template:
 
 ## API Reference
 
-When you import Moe-js, the returned object is the default instance of the MoeEngine class.  
+When you import moe-js, the returned object is the default instance of the MoeEngine class.  
 
 ```Javascript
     const moe = require('moe-js');
@@ -363,12 +379,12 @@ functions used by the generated template function.
 
 ## Express Integration
 
-You can use Moe-js as a view engine in Express:
+You can use moe-js as a view engine in Express:
 
 ```Javascript
 const moe = require('moe-js');
 
-// Use Moe-js for '.moe' view templates
+// Use moe-js for '.moe' view templates
 app.engine('moe', moe.express(app));
 
 // Where to look for views
@@ -380,7 +396,7 @@ app.set('view engine', 'moe');
 
 ### Outer Layout
 
-When using Moe-js with Express, you can specify an outer layout file into which the internal view
+When using moe-js with Express, you can specify an outer layout file into which the internal view
 is wrapped.
 
 The name of the layout is determined in the following way:
@@ -423,7 +439,7 @@ integrations will want to look for partials in a particular location, the contex
 member variable that can provide functions used to resolve the partial location and to decorate the partials model object
 before the partial is rendered.
 
-These hooks are used by Moe-js's Express integration to look for partials in the views subfolder and to 
+These hooks are used by moe-js's Express integration to look for partials in the views subfolder and to 
 merge models with local settings.
 
 ```Javascript
