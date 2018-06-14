@@ -1,6 +1,6 @@
-## Welcome to moe-js
+## Welcome to Moe-js
 
-"moe-js" is a simple, fast, flexible, modern Mustache inspired templating engine for JavaScript.
+"Moe-js" is a simple, fast, flexible, modern Mustache inspired templating engine for JavaScript.
 
 * Mustache/Handlebars inspired format
 * Support for in-template JavaScript expressions
@@ -15,16 +15,16 @@
 
 ## Background
 
-moe-js was born out of frustration with Mustache - in particular with the
+Moe-js was born out of frustration with Handlebars - in particular with the
 awkward helper methods model and the lack of support for even simple expressions
-within the template. moe-js provides a way to "power-up" an existing set of Mustache templates 
+within the template. Moe-js provides a way to "power-up" an existing set of Mustache templates 
 without having to rewrite them from scratch.
 
-With moe-js, you get a similar syntax but all the power of JavaScript within the template.  Unlike
-Mustache which is language agnostic, moe-js is unshamedly tied to JavaScript.
+With Moe-js, you get a similar syntax but all the power of JavaScript within the template.  Unlike
+Mustache which is language agnostic, Moe-js is unshamedly tied to JavaScript.
 
-moe-js doesn't claim to be compatible with Mustache but the syntax is very similar and existing
-templates can be converted fairly easily (certainly *alot* more easily than switching
+Moe-js doesn't claim to be compatible with Mustache but the syntax is very similar and existing
+templates can be converted fairly easily (certainly more easily than switching
 to a completely different view engine).
 
 ## Basic Usage
@@ -56,8 +56,8 @@ var template = moe.compileFileSync("mytemplate.moe", "UTF8");
 Once you have a template, you can execute it:
 
 ```Javascript
-var html = template({ name: "Hello, from moe-js"});
-assert(html == "<h1>Hello, from moe-js</h1>")
+var html = template({ name: "Hello, from Moe-js"});
+assert(html == "<h1>Hello, from Moe-js</h1>")
 ```
 
 ## Async Templates
@@ -71,7 +71,7 @@ the second parameter to any of the compile functions.
 ```Javascript
 // Compile an async template (Note use of "await model.promise")
 var template = moe.compile(`Promise result:  {{await model.promise}}`, {
-    asyncTemplate: true
+    asyncTemplate: true     // Indicates we want an async template
 });
 
 // Create a simple promise that delivers a string
@@ -89,12 +89,12 @@ assert(result == "Promise result: Hello");
 
 ## Template Language
 
-moe-js templates are similar to Mustache/Handlebars templates, but there are some important differences.  The
-following shows how to write moe-js templates.
+Moe-js templates are similar to Mustache/Handlebars templates, but there are some important differences.  The
+following shows how to write Moe-js templates.
 
 ### Use `{{}}` to Embed Expressions
 
-moe-js uses `{{` and `}}` to delimit expressions:
+Moe-js uses `{{` and `}}` to delimit expressions:
 
 ```html
 <p>10 + 20 = {{ 10 + 20 }}</p>
@@ -509,7 +509,7 @@ functions used by the generated template function.
 
 ## Express Integration
 
-You can use moe-js as a view engine in Express:
+You can use Moe-js as a view engine in Express:
 
 ```Javascript
 const moe = require('moe-js');
@@ -526,7 +526,7 @@ app.set('view engine', 'moe');
 
 ### Outer Layout
 
-When using moe-js with Express, you can specify an outer layout file into which the internal view
+When using Moe-js with Express, you can specify an outer layout file into which the internal view
 is wrapped.
 
 The name of the layout is determined in the following way:
@@ -553,6 +553,62 @@ A simple minimal layout might look like this:
 </html>
 ```
 
+## Converting Handlebar Templates to Moe.JS
+
+As mentioned above, Moe.JS doesn't claim to be compatible with Mustache/Handlebars but does
+have a similar syntax which lends it to easy conversion of existing templates to Moe.JS.
+
+This section explains common things to watch out for if you're porting existing Handlebars
+templates.
+
+### Use The `model.` Variable To Access Passed Data
+
+This is probably the biggest impact on existing templates.  Unlike Handlebars which automatically
+maps referenced variables to the current scope, Moe.JS doesn't provide this - primarily because
+under the covers this is straight JavaScript code.
+
+While this is inconvenient for porting templates, it does make the templates more explicit, 
+faster and facilitates the use of any JavaScript expression.
+
+```html
+{{title}}           <- Handlebars
+{{model.title}}     <- Moe.JS
+```
+
+### Rewrite Helper Functions
+
+Helper functions are implemented differently in Moe.JS.   See above for how to write Moe.JS helpers.
+
+Don't forget you can also use in-template `{{#code}}` blocks for one off helpers.
+
+### Quote Referenced Partials
+
+Moe.JS's partial directive expects a JavaScript expression which means the referenced template
+name must be quoted:
+
+```html
+{{> partial}}       <- Handlebars
+{{> "partial"}}     <- Moe.JS
+```
+
+### Replace Shorthand Comments
+
+Handlebars allows two kinds of comments `{{!-- --}}` and `{{! }}`.  Moe.JS only 
+supports the first format, since the second format might be a valid JavaScript expression (not operator).
+
+```html
+{{!-- Comment  --}} <- Handlebars or Moe.JS
+{{! Comment }}      <- Handlebars only
+```
+
+### Replace Handlebars Style Paths
+
+Handlebars uses "paths" (eg: `.`,  `..` etc...) to reference the current and outer scopes.  These don't 
+exist in Moe.JS because expressions are plain JavaScript.
+
+In Moe.JS, these paths generally aren't required since you can name loop variables explicitly and you
+can always get back to the root `model` object.
+
 ## Internals
 
 ### The Context Object
@@ -569,7 +625,7 @@ integrations will want to look for partials in a particular location, the contex
 member variable that can provide functions used to resolve the partial location and to decorate the partials model object
 before the partial is rendered.
 
-These hooks are used by moe-js's Express integration to look for partials in the views subfolder and to 
+These hooks are used by Moe-js's Express integration to look for partials in the views subfolder and to 
 merge models with local settings.
 
 ```Javascript
