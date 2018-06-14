@@ -130,9 +130,8 @@ MoeHelpers.prototype.partial = function(model, context, scope, name, subModel)
 function MoeEngine() 
 {
 	this.helpers = new MoeHelpers(this);
-	this.templates = {};
-	this.currentModel = null;
-	this.currentContext = null;
+	this.asyncTemplates = {};
+	this.syncTemplates = {};
 	this.shouldPassLocals = false;
 }
 
@@ -142,12 +141,13 @@ MoeEngine.prototype.express = function(app)
 }
 
 // Compile a string template, returns a function(model, context)
-MoeEngine.prototype.compile = function(template)
+MoeEngine.prototype.compile = function(template, options)
 {
 	var parts = "";
 	var code = "";
 	var blockTypeStack = [ "none" ];
-	var isAsync = false;
+
+	options = normalizeOptions(options);
 
 	for (var token of Tokenizer.tokenize(template))
 	{
@@ -196,10 +196,6 @@ MoeEngine.prototype.compile = function(template)
 
 			case "#code":
 				code += token.text;
-				break;
-
-			case "#async":
-				isAsync = true;
 				break;
 
 			case "#if":
@@ -318,54 +314,26 @@ MoeEngine.prototype.compile = function(template)
 	var fn;
 	var compiledFn;
 
-	if (!isAsync)
+	if (!options.asyncTemplate)
 	{
 		compiledFn = Function(['helpers', 'model', 'context'], finalCode);
 
-		// Stub function to setup model etc...
-		fn = function(model, context)
+		// Stub function to pass in helpers
+		fn = (model, context) => 
 		{
-			// Store model and context while we process the template
-			// (in case helpers want to get to it)
-			var oldModel = this.currentModel;
-			var oldContext = this.currentContext;
-			try
-			{
-				this.currentModel = model;
-				this.currentContext = context;
-				return compiledFn(this.helpers, model, context);
-			}
-			finally
-			{
-				this.currentModel = oldModel;
-				this.currentContext = oldContext;
-			}
-		}.bind(this);
+			return compiledFn(this.helpers, model, context);
+		};
 	}
 	else
 	{
 		let AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
 		compiledFn = new AsyncFunction(['helpers', 'model', 'context'], finalCode);
 
-		// Stub function to setup model etc...
-		fn = async function(model, context)
+		// Stub function to pass in helpers
+		fn = async (model, context) =>
 		{
-			// Store model and context while we process the template
-			// (in case helpers want to get to it)
-			var oldModel = this.currentModel;
-			var oldContext = this.currentContext;
-			try
-			{
-				this.currentModel = model;
-				this.currentContext = context;
-				return await compiledFn(this.helpers, model, context);
-			}
-			finally
-			{
-				this.currentModel = oldModel;
-				this.currentContext = oldContext;
-			}
-		}.bind(this);
+			return await compiledFn(this.helpers, model, context);
+		};
 	}
 
 	// Store the implementation function (handy to for debug to see the actual implementation)
@@ -373,7 +341,7 @@ MoeEngine.prototype.compile = function(template)
 	//   var template = moe.compileFileSync("template.moe");
 	//   console.log(template.impl.toString());
 	fn.impl = compiledFn;
-	fn.isAsync = isAsync;
+	fn.isAsync = options.asyncTemplate;
 
 	return fn;
 }
@@ -383,11 +351,39 @@ MoeEngine.prototype.compile = function(template)
 // have been registered
 MoeEngine.prototype.discardTemplateCache = function()
 {
-	this.templates = {};
+	this.syncTemplates = {};
+	this.asyncTemplates = {};
+}
+
+function normalizeOptions(options)
+{
+	if (options === undefined)
+	{
+		options = {};
+	}
+
+	if (typeof options === "boolean")
+	{
+		options = {
+			asyncTemplate: options,
+		}
+	}
+
+	if (typeof options === "string")
+	{
+		options = {
+			encoding: options,
+		}
+	}
+
+	return merge({
+		encoding: "UTF8",
+		asyncTemplate: false,
+	}, options)
 }
 
 // Compile a file (async)
-MoeEngine.prototype.compileFile = function(filename, encoding, cb)
+MoeEngine.prototype.compileFile = function(filename, options, cb)
 {
 	// Qualify with extension
 	if (path.extname(filename).length == 0)
@@ -395,16 +391,22 @@ MoeEngine.prototype.compileFile = function(filename, encoding, cb)
 		filename += ".moe";
 	}
 
-	// Already compiled?
-	if (this.templates[filename])
+	// Normalize options
+	options = normalizeOptions(options);
+
+	// Check cache
+	var cache = options.asyncTemplates ? this.asyncTemplates : this.syncTemplate;
+	var template = cache[filename];
+
+	if (template)
 	{
 		setImmediate(function() {
-			cb(null, this.templates[filename]);
-		}.bind(this));
+			cb(null, template);
+		});
 	}
 	else
 	{
-		fs.readFile(filename, encoding ? encoding : 'UTF8', function(err, text) {
+		fs.readFile(filename, options.encoding, function(err, text) {
 
 			if (err)
 				return cb(err);
@@ -412,7 +414,7 @@ MoeEngine.prototype.compileFile = function(filename, encoding, cb)
 			try
 			{
 				var compiled = this.compile(text);
-				this.templates[filename] = compiled;
+				cache[filename] = compiled;
 				cb(null, compiled);
 			}
 			catch (err)
@@ -433,14 +435,20 @@ MoeEngine.prototype.compileFileSync = function(filename, encoding)
 		filename += ".moe";
 	}
 
+	// Normalize options
+	options = normalizeOptions(options);
+
+	var cache = options.asyncTemplates ? this.asyncTemplates : this.syncTemplate;
+	var template = cache[filename];
+
 	// Already compiled?
-	if (this.templates[filename])
-		return this.templates[filename];
+	if (template)
+		return template;
 
 	// Compile it
-	var text = fs.readFileSync(filename, encoding ? encoding : 'UTF8');
-	var compiled = this.compile(text);
-	this.templates[filename] = compiled;
+	var text = fs.readFileSync(filename, options.encoding);
+	var compiled = this.compile(text, options);
+	cache[filename] = compiled;
 	return compiled;
 }
 

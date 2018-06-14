@@ -90,12 +90,13 @@ test("Consume line space", () => {
 test("Tokenizer", () => {
 
     var template = fs.readFileSync("testTokens.moe", "utf8");
+    template = template.replace("\r\n", "\n");
     var expected = [
-        { kind: 'literal', text: 'line1\r\n' },
+        { kind: 'literal', text: 'line1\n' },
         { kind: '{{}}', expression: 'expr' },
         { kind: '{{{}}}', expression: 'expr' },
-        { kind: 'literal', text: '\r\n' },
-        { kind: '#if', expression: 'something' },
+        { kind: 'literal', text: '\n' },
+        { kind: '#if', expression: 'something'},
         { kind: '#else', expression: '' },
         { kind: '#else', expression: '' },
         { kind: '#else', expression: '' },
@@ -105,10 +106,10 @@ test("Tokenizer", () => {
         { kind: '{{}}', expression: '"}}"' },
         { kind: 'literal', text: 'pre' },
         { kind: '{{}}', expression: 'blah' },
-        { kind: 'literal', text: 'post\r\n' },
+        { kind: 'literal', text: 'post\n' },
         { kind: 'literal', text: 'RAW {{ }} TEXT' },
-        { kind: 'literal', text: '\r\n' },
-        { kind: '#code', text: 'This is some code {{#if this should be ignore by the tokenizer}}\r\n' },
+        { kind: 'literal', text: '\n' },
+        { kind: '#code', text: 'This is some code {{#if this should be ignore by the tokenizer}}\n' },
         { kind: '>', expression: '"Partial"' },
     ]
 
@@ -646,9 +647,8 @@ test("With/Else Block (false)", () => {
 test("Async Templates", async () => {
 
     var template = moe.compile(`
-    {{#async}}
     {{await model.promise}}
-    `);
+    `, true);
 
     expect(template.isAsync).toBe(true);
     

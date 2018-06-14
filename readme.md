@@ -60,7 +60,32 @@ var html = template({ name: "Hello, from moe-js"});
 assert(html == "<h1>Hello, from moe-js</h1>")
 ```
 
+## Async Templates
 
+By default, templates are compiled to be executed syncrhonously, but moe.js can also build
+an async template that returns a promise.  This lets you use `async` statements within the
+template itself.  To compile an async template, pass either `true` or `{ asyncTemplate: true }` as 
+the second parameter to any of the compile functions.
+
+
+```Javascript
+// Compile an async template (Note use of "await model.promise")
+var template = moe.compile(`Promise result:  {{await model.promise}}`, {
+    asyncTemplate: true
+});
+
+// Create a simple promise that delivers a string
+var promise = new Promise((resolve, reject) => {
+    setTimeout(() => resolve("Hello"), 1000);
+});
+
+// Execute the template (Note use of "await" on the template function)
+var result = await template({
+    promise: promise,
+});
+
+assert(result == "Promise result: Hello");
+```
 
 ## Template Language
 
@@ -115,15 +140,8 @@ You can embed comments as follows:
 {{!-- This is a comment --}}
 ```
 
-You can also use block comments:
-
-```html
-{{#comment}}
-This is a comment, that can be used to comment out entire sections, including
-other moe tags.
-{{/comment}}
-```
-
+Note: comment blocks can be used to surround other moe.js directives - ie: they're
+an effective way to "comment out" entire sections of a template.
 
 ### The Special `model` Variable 
 
@@ -141,7 +159,7 @@ Inside the template, the model properties would be accessed as follows:
     <h1>{{model.title}}</h1>
 ```
 
-(Unlike Mustache, `{{title}}` won't work, you must specify `model.`")
+(Unlike Mustache, `{{title}}` won't work, you must specify `{{model.title}}`")
 
 ### Conditional Execution
 
@@ -201,7 +219,7 @@ An `{{#unless}}` block can't have an `{{#else}}` block.
 
 ### Rendering Collections
 
-To loop over a collection of items, use the `{{#each}}` directive and the special variable `item`:
+To loop over a collection of items, use the `{{#each}}` directive and the special loop variable `item`:
 
 ```html
 {{#each ["apples", "pears", "bananas"]}}
@@ -209,7 +227,7 @@ To loop over a collection of items, use the `{{#each}}` directive and the specia
 {{/each}}
 ```
 
-You can also specify a variable name for the item. This can be handy when working with nested loops.
+You can also specify a name for the loop variable. This can be handy when working with nested loops.
 
 ```html
 {{#each u in model.Users}}
@@ -323,7 +341,7 @@ function FormatPrice(val)
 
 ### Partials
 
-Partials let you embed the contents of another template inside this template:
+Partials let you embed the contents of another template inside this template.
 
 Invoke the UserDetails template, passing the current model as the model for the template.
 
@@ -337,7 +355,7 @@ Note that unlike Mustache/Handlebars, the name of the partial template must be q
 {{> "UserDetails_" + model.role }}
 ```
 
-Inside an `{{#each}}` block, the current loop item is passed as the model, so in this case the current user would be passed as the model to the partial template:
+When invoking a partial from within an `{{#each}}` block, the current loop item is passed as the model, so in this case the current user would be passed as the model to the partial template:
 
 ```html
 {{#each u in model.Users}}
@@ -372,10 +390,11 @@ The `compile` function takes template string and compiles it to a function that 
 render the template output:
 
 ``` Javascript
-function moe.compile(templateScript)
+function moe.compile(templateScript. [options])
 ```
 
-* `templateScript` is a string containing the template to be compiled
+* `templateScript` -  a string containing the template to be compiled
+* `options` - optional compile options (see below)
 
 The returned function is of the following form:
 
@@ -383,8 +402,8 @@ The returned function is of the following form:
 function template(model [, context])
 ```
 
-* `model` is the data to be passed to the model
-* `context` is an optional object that will be passed to the template and to any partials
+* `model` - the data to be passed to the model
+* `context` - an optional object that will be passed to the template and to any partials
 
 ### moe.compileFile
 
@@ -392,12 +411,12 @@ The `compileFile` function loads a template from text file, compiles it using th
 stores the result in an internal cache.
 
 ```Javascript
-function moe.compileFile(filename, encoding, callback)
+function moe.compileFile(filename, options, callback)
 ```
 
-* `filename` is the file to compile.  If the file doesn't have an extension ".moe" will be automatically appended.
-* `encoding` the text encoding of the format (typical 'UTF8')
-* `callback` a function that will be called when the template has been compiled
+* `filename` - the file to compile.  If the file doesn't have an extension ".moe" will be automatically appended.
+* `options` - compile options (see below)
+* `callback` - function that will be called when the template has been compiled
 
 The callback function is a typical Node style callback:
 
@@ -410,11 +429,11 @@ function callback(err, template)
 Synchronous version of the `moe.compileFile` function:
 
 ```Javascript
-function moe.compileFileSync(filename, encoding)
+function moe.compileFileSync(filename, options)
 ```
 
 * `filename` is the file to compile
-* `encoding` the text encoding of the format (typical 'UTF8')
+* `options` - optional compile options (see below)
 * returns the compiled template, or throws an exception
 
 
@@ -430,6 +449,38 @@ function moe.discardTemplateCache()
 ### moe.helpers
 
 A set of functions and objects that are available to template scripts.  See below...
+
+## Compile Options
+
+Each of the compile methods has an options parameter which accepts an object with the following
+members:
+
+```Javascript
+{
+    encoding: "UTF8",       // File encoding for compileFile* functions
+    asyncTemplate: false,   // Whether to compile a sync or async template function
+}
+```
+
+The values shown above are the default values used if not explicitly specified.
+
+You can also pass a boolean value which will set the asyncTemplate option, or a string which
+will set the encoding option.  eg:
+
+```Javascript
+    // compile an async template
+    moe.compile('...', true);                       
+
+    // compile a UTF16 template file
+    moe.compileFileSync("template.moe", "UTF16");
+
+    // compile an async UTF16 template file
+    moe.compileFileSync("template.moe", {
+        encoding: "UTF16",
+        asyncTemplate: true
+    });
+```
+
 
 ## Helper Functions
 
