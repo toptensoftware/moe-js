@@ -1,6 +1,6 @@
 ## Welcome to Moe-js
 
-"Moe-js" is a simple, fast, flexible, modern Mustache inspired templating engine for JavaScript.
+"Moe-js" is a simple, fast, flexible, modern Handlebars inspired templating engine for JavaScript.
 
 * Mustache/Handlebars inspired format
 * Support for in-template JavaScript expressions
@@ -17,17 +17,68 @@
 
 Moe-js was born out of frustration with Handlebars - in particular with the
 awkward helper methods model and the lack of support for even simple expressions
-within the template. Moe-js provides a way to "power-up" an existing set of Mustache templates 
+within the template. Moe-js provides a way to "power-up" an existing set of Handlebars templates 
 without having to rewrite them from scratch.
 
 With Moe-js, you get a similar syntax but all the power of JavaScript within the template.  Unlike
-Mustache which is language agnostic, Moe-js is unshamedly tied to JavaScript.
+Handlebars which is language agnostic, Moe-js is unshamedly tied to JavaScript.
 
-Moe-js doesn't claim to be compatible with Mustache but the syntax is very similar and existing
+Moe-js doesn't claim to be compatible with Handlebars but the syntax is very similar and existing
 templates can be converted fairly easily (certainly more easily than switching
 to a completely different view engine).
 
-## Basic Usage
+## Using Moe.JS with Express
+
+You can use Moe-js as a view engine in Express:
+
+```Javascript
+const moe = require('moe-js');
+
+// Use moe-js for '.moe' view templates
+app.engine('moe', moe.express(app));
+
+// Where to look for views
+app.set('views', path.join(__dirname, 'views'));
+
+// Default view engine to use when render call doesn't include file extension
+app.set('view engine', 'moe');
+```
+
+### Outer Layout
+
+When using Moe-js with Express, you can specify an outer layout file into which the internal view
+is wrapped.
+
+The name of the layout is determined in the following way:
+
+1. The `model.layout` property
+2. The `app.locals.layout` property
+3. Defaults to "layout"
+
+To suppress the use of a layout set the property to `false`.  Layout files are searched for in the same
+directory as other views.
+
+On rendering the layout, the originally passed model will be decorated with a new property `body` containing
+the rendered content of the inner view.  
+
+A simple minimal layout might look like this:
+
+```html
+<html>
+<head>
+</head>
+<body>
+{{{ model.body }}}
+</body>
+</html>
+```
+
+### Support for Async
+
+Moe.JS's Express middleware compiles view templates as async templates, so you can use `await` in your views!
+
+
+## Using Moe.JS Directly
 
 Before executing a template, you must first compile it.  
 
@@ -95,7 +146,7 @@ assert(result == "Promise result: Hello");
 
 ## Template Language
 
-Moe-js templates are similar to Mustache/Handlebars templates, but there are some important differences.  The
+Moe-js templates are similar to Handlebars templates, but there are some important differences.  The
 following shows how to write Moe-js templates.
 
 ### Use `{{}}` to Embed Expressions
@@ -165,7 +216,7 @@ Inside the template, the model properties would be accessed as follows:
     <h1>{{model.title}}</h1>
 ```
 
-(Unlike Mustache, `{{title}}` won't work, you must specify `{{model.title}}`")
+(Unlike Handlebars, `{{title}}` won't work, you must specify `{{model.title}}`")
 
 ### Conditional Execution
 
@@ -177,7 +228,7 @@ The `{{#if}}` / `{{#else}}` / `{{/if}}` directives are used to conditionally inc
 {{/if}}
 ```
 
-Else blocks can be marked as `{{#else}}` or `{{else}}` (for Mustache compatibility)
+Else blocks can be marked as `{{#else}}` or `{{else}}` (for Handlebars compatibility)
 
 ```html
 {{#if model.quantity == 0}}
@@ -355,7 +406,7 @@ Invoke the UserDetails template, passing the current model as the model for the 
 {{> "UserDetails" }}
 ```
 
-Note that unlike Mustache/Handlebars, the name of the partial template must be quoted because it's a JavaScript expression.  This also means you can dynamically synthesize the name of the partial to invoke:
+Note that unlike Handlebars, the name of the partial template must be quoted because it's a JavaScript expression.  This also means you can dynamically synthesize the name of the partial to invoke:
 
 ```html
 {{> "UserDetails_" + model.role }}
@@ -624,60 +675,9 @@ Note that you should NOT replace the existing `.helpers` instance - it contains 
 functions used by the generated template function.
 
 
-## Express Integration
-
-You can use Moe-js as a view engine in Express:
-
-```Javascript
-const moe = require('moe-js');
-
-// Use moe-js for '.moe' view templates
-app.engine('moe', moe.express(app));
-
-// Where to look for views
-app.set('views', path.join(__dirname, 'views'));
-
-// Default view engine to use when render call doesn't include file extension
-app.set('view engine', 'moe');
-```
-
-### Outer Layout
-
-When using Moe-js with Express, you can specify an outer layout file into which the internal view
-is wrapped.
-
-The name of the layout is determined in the following way:
-
-1. The `model.layout` property
-2. The `app.locals.layout` property
-3. Defaults to "layout"
-
-To suppress the use of a layout set the property to `false`.  Layout files are searched for in the same
-directory as other views.
-
-On rendering the layout, the originally passed model will be decorated with a new property `body` containing
-the rendered content of the inner view.  
-
-A simple minimal layout might look like this:
-
-```html
-<html>
-<head>
-</head>
-<body>
-{{{ model.body }}}
-</body>
-</html>
-```
-
-### Support for Async
-
-Moe.JS's Express middleware compiles view templates as async templates, so you can use `await` in your views!
-
-
 ## Converting Handlebar Templates to Moe.JS
 
-As mentioned above, Moe.JS doesn't claim to be compatible with Mustache/Handlebars but does
+As mentioned above, Moe.JS doesn't claim to be compatible with Handlebars but does
 have a similar syntax which lends it to easy conversion of existing templates to Moe.JS.
 
 This section explains common things to watch out for if you're porting existing Handlebars
