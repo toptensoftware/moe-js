@@ -3,11 +3,11 @@
 "moe-js" is a simple, fast, flexible, modern Mustache inspired templating engine for JavaScript.
 
 * Mustache/Handlebars inspired format
-* Compiles templates to ES6 template literals for fast execution
 * Support for in-template JavaScript expressions
 * Support for embedded code blocks
 * Support for external helper functions
 * Support for partials
+* Support for async templates
 * Built-in Express integration including support for outer "layouts"
 * Built-in template file cache
 * Simple to use
@@ -59,6 +59,8 @@ Once you have a template, you can execute it:
 var html = template({ name: "Hello, from moe-js"});
 assert(html == "<h1>Hello, from moe-js</h1>")
 ```
+
+
 
 ## Template Language
 
