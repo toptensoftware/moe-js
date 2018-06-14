@@ -17,6 +17,8 @@ function MoeHelpers(moe)
 	this.moe = moe;
 }
 
+MoeHelpers.prototype.require = require;
+
 // Helper to encode html entities
 MoeHelpers.prototype.encode = function(str) 
 {
@@ -189,7 +191,6 @@ MoeEngine.prototype.express = function(app)
 MoeEngine.prototype.compile = function(template, options)
 {
 	var parts = "";
-	var code = "";
 	var blockTypeStack = [ "none" ];
 
 	options = normalizeOptions(options);
@@ -247,7 +248,7 @@ MoeEngine.prototype.compile = function(template, options)
 				break;
 
 			case "#code":
-				code += token.text;
+				parts += token.text;
 				break;
 
 			case "#if":
@@ -354,9 +355,8 @@ MoeEngine.prototype.compile = function(template, options)
 	var finalCode;
 	finalCode = `var scope = null;\n`;
 	finalCode += `var $encode = helpers.encode;\n`;
+	finalCode += `var require = helpers.require;\n`;
 	finalCode += `var $buf = "";\n`;
-	finalCode += code;
-	finalCode += "\n";
 	finalCode += parts;
 	finalCode += "\n";
 	finalCode += `return $buf;`;

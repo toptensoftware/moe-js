@@ -119,11 +119,10 @@ assert(html == "<h1>Hello, from Moe-js</h1>")
 
 ## Async Templates
 
-By default, templates are compiled to be executed syncrhonously, but Moe-js can also build
-an async template that returns a promise.  This lets you use `async` statements within the
+By default, templates are compiled to be executed synchronously, but Moe-js can also build
+an async template functions that returns a promise.  This lets you use `await` statements within the
 template itself.  To compile an async template, pass either `true` or `{ asyncTemplate: true }` as 
 the second parameter to any of the compile functions.
-
 
 ```Javascript
 // Compile an async template (Note use of "await model.promise")
