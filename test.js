@@ -643,3 +643,21 @@ test("With/Else Block (false)", () => {
 
 });
 
+test("Async Templates", async () => {
+
+    var template = moe.compile(`
+    {{#async}}
+    {{await model.promise}}
+    `);
+
+    expect(template.isAsync).toBe(true);
+    
+    var result = await template({ 
+        promise: new Promise((resolve, reject) => {
+            setTimeout(() => resolve("Hello"), 50);
+        }),
+    });
+
+    expect(result).toMatch(/Hello/);
+
+});

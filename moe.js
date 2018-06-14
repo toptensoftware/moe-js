@@ -147,6 +147,7 @@ MoeEngine.prototype.compile = function(template)
 	var parts = "";
 	var code = "";
 	var blockTypeStack = [ "none" ];
+	var isAsync = false;
 
 	for (var token of Tokenizer.tokenize(template))
 	{
@@ -195,6 +196,10 @@ MoeEngine.prototype.compile = function(template)
 
 			case "#code":
 				code += token.text;
+				break;
+
+			case "#async":
+				isAsync = true;
 				break;
 
 			case "#if":
@@ -310,33 +315,65 @@ MoeEngine.prototype.compile = function(template)
 
 //console.log(finalCode);
 
-	var compiledFn = Function(['helpers', 'model', 'context'], finalCode);
+	var fn;
+	var compiledFn;
 
-	// Stub function to setup model etc...
-	var fn = function(model, context)
+	if (!isAsync)
 	{
-		// Store model and context while we process the template
-		// (in case helpers want to get to it)
-		var oldModel = this.currentModel;
-		var oldContext = this.currentContext;
-		try
+		compiledFn = Function(['helpers', 'model', 'context'], finalCode);
+
+		// Stub function to setup model etc...
+		fn = function(model, context)
 		{
-			this.currentModel = model;
-			this.currentContext = context;
-			return compiledFn(this.helpers, model, context);
-		}
-		finally
+			// Store model and context while we process the template
+			// (in case helpers want to get to it)
+			var oldModel = this.currentModel;
+			var oldContext = this.currentContext;
+			try
+			{
+				this.currentModel = model;
+				this.currentContext = context;
+				return compiledFn(this.helpers, model, context);
+			}
+			finally
+			{
+				this.currentModel = oldModel;
+				this.currentContext = oldContext;
+			}
+		}.bind(this);
+	}
+	else
+	{
+		let AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+		compiledFn = new AsyncFunction(['helpers', 'model', 'context'], finalCode);
+
+		// Stub function to setup model etc...
+		fn = async function(model, context)
 		{
-			this.currentModel = oldModel;
-			this.currentContext = oldContext;
-		}
-	}.bind(this);
+			// Store model and context while we process the template
+			// (in case helpers want to get to it)
+			var oldModel = this.currentModel;
+			var oldContext = this.currentContext;
+			try
+			{
+				this.currentModel = model;
+				this.currentContext = context;
+				return await compiledFn(this.helpers, model, context);
+			}
+			finally
+			{
+				this.currentModel = oldModel;
+				this.currentContext = oldContext;
+			}
+		}.bind(this);
+	}
 
 	// Store the implementation function (handy to for debug to see the actual implementation)
 	// eg:
 	//   var template = moe.compileFileSync("template.moe");
 	//   console.log(template.impl.toString());
 	fn.impl = compiledFn;
+	fn.isAsync = isAsync;
 
 	return fn;
 }
