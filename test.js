@@ -12,6 +12,40 @@ test("Raw text", () => {
     expect(moe.compile("<p>{{{model.x}}}</p>")({x:"<br/>"})).toBe("<p><br/></p>");
 })
 
+test("Comments (single line)", () => {
+    var template = moe.compile(`
+    PRE
+    {{!-- Comment --}}
+    POST
+    `);
+    
+    var result = template({});
+
+    console.log(result);
+
+    expect(result).toMatch(/PRE/);
+    expect(result).not.toMatch(/Comment/);
+    expect(result).toMatch(/POST/);
+})
+
+test("Comments (block)", () => {
+    var template = moe.compile(`
+    PRE
+    {{#comment}}
+    This is a comment
+    {{/comment}}
+    POST
+    `);
+    
+    var result = template({});
+
+    console.log(result);
+
+    expect(result).toMatch(/PRE/);
+    expect(result).not.toMatch(/Comment/);
+    expect(result).toMatch(/POST/);
+})
+
 test("If Block (true)", () => {
 
     var template = moe.compile(`

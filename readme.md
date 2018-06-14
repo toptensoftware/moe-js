@@ -105,6 +105,24 @@ Would result in:
 <p><br/></p>
 ```
 
+### Comments
+
+You can embed comments as follows:
+
+```html
+{{!-- This is a comment --}}
+```
+
+You can also use block comments:
+
+```html
+{{#comment}}
+This is a comment, that can be used to comment out entire sections, including
+other moe tags.
+{{/comment}}
+```
+
+
 ### The Special `model` Variable 
 
 Data passed to the template is available as the special `model` variable inside the template:

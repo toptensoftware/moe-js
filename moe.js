@@ -1,5 +1,393 @@
+'use strict'
+
 const fs = require('fs');
 const path = require('path');
+
+
+//////////////////////////////////////////////////////////////////////////////////
+// Tokenizer 
+
+class TokenError
+{
+	constructor(message, position)
+	{
+		this.message = message;
+		this.position = position;
+	}
+}
+
+function isLineSpace(ch)
+{
+	return ch == ' ' || ch == '\t';
+}
+
+function isWhiteSpace(ch)
+{
+	return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
+}
+
+function skipLinespace(s, p)
+{
+	while (isLineSpace(s[p]))
+		p++;
+	return p;
+}
+
+function skipWhitespace(s, p)
+{
+	while (isLineSpace(s[p]))
+		p++;
+	return p;
+}
+
+// Expand pStart and pEnd to consume surrounding white space
+// but only if that white space extends to the start and end of the line
+function consumeLineSpace(s, pStartIn, pEndIn)
+{
+	// Skip preceding line space
+	var pStart = pStartIn;
+	while (pStart > 0 && isLineSpace(s[pStart-1]))
+		pStart--;
+
+	// Did we reach the start of the line?
+	if (pStart == 0 || s[pStart-1] == '\r' || s[pStart-1] == '\n')
+	{
+		// Yes
+		
+		// Skip trailing line space
+		pEnd = pEndIn;
+		while (isLineSpace[pEnd])
+			pEnd++;
+
+		// End if line found?
+		if (s[pEnd] == '\0' || s[pEnd] == '\r' || s[pEnd] == '\n')
+		{
+			// Yes, skip it
+			if (s[pEnd] == '\r')
+				pEnd++;
+			if (s[pEnd] == '\n')
+				pEnd++;
+
+			// Return the expanded range
+			return [pStart, pEnd];
+		}
+	}
+
+	// Can't extend
+	return [pStartIn, pEndIn];
+
+}
+
+function isIdentifierChar(ch)
+{
+	return (ch >= 'a' && ch <='z') || (ch >= 'A' && ch<='Z') || (ch >= '0' && ch <='9') || ch == '_' || ch == '$';
+}
+
+function readIdentifer(s, p)
+{
+	var pStart = p;
+	while (isIdentifierChar(s[p]))
+		p++;
+	return s.substr(pStart, p-pStart);
+}
+
+function skipString(s, p)
+{
+	var chKind = s[p];
+	p++;
+
+	while (s[p] != chKind)
+	{
+		// template literal expression?
+		if (chKind == '`' && s[p] == '$' && s[p+1] == '{')
+		{
+			p+=2;
+			p = skipJavaScript(s, p);
+			if (s[p] != '}')
+				throw new TokenError("Syntax error in template literal", p);
+			p++;
+			continue;
+		}
+
+		// Skip escaped characters
+		if (s[p] == '\\')
+			p++;
+		p++;
+	}
+
+	p++;
+	return p;
+}
+
+function skipJavaScript(s, p)
+{
+	while (true)
+	{
+		p = skipWhitespace(s, p);
+		switch (s[p])
+		{
+			case '}':
+				return p;
+
+			case '{':
+				p++;
+				p = skipJavascript(s, p);
+				p = skipWhitespace(s, p);
+				if (s[p] != '}')
+					throw new TokenError("Unmatched closing brace in expression", p);
+				p++;
+				break;
+
+			case '(':
+				p++;
+				p = skipJavascript(s, p);
+				p = skipWhitespace(s, p);
+				if (s[p] != ')')
+					throw new TokenError("Unmatched closing parentheses in expression", p);
+				p++;
+				break;
+
+			case '[':
+				p++;
+				p = skipJavascript(s, p);
+				p = skipWhitespace(s, p);
+				if (s[p] != ']')
+					throw new TokenError("Unmatched closing square bracket in expression", p);
+				p++;
+				break;
+
+			case '\'':
+			case '\"':
+			case '`':
+				p = skipString(s, p);
+				break;
+			
+			default:
+				p++;
+		}
+	}
+}
+
+function* tokenize(strIn)
+{
+	// We can save a lot of boundary checks by null terminating
+	var s = strIn + "\0";
+	var p = 0;
+
+	while (s[p] != '\0')
+	{
+		// Find the next open brace
+		var tokenPos = s.indexOf("{{", p);
+
+		// No more, return the trail text
+		if (tokenPos < 0)
+		{
+			yield {
+				kind: "literal",
+				text: s.substr(p, tokenPos - p),
+			}
+			return;
+		}
+
+		// Comment?
+		if (s.substr(tokenPos+2, 3) == "!--")
+		{
+			// Find the end delimiter
+			var endPos = s.indexOf("--}}", tokenPos);
+			if (endPos < 0)
+				throw new TokenError("Unclosed comment", tokenPos);
+
+			// Skip closing delimiter
+			endPos += 4;
+
+			// Expand range to consume surrounding line space
+			[tokenPos, endPos] = consumeLineSpace(s, tokenPos, endPos);
+
+			// Yield preceding literal text
+			yield {
+				kind: "literal",
+				text: s.substr(p, tokenPos - p),
+			}
+
+			// Move current position
+			p = endPos;
+			continue;
+		}
+
+		// What kind of token are we dealing with
+		var mode = 2;					// number of braces, or zero for comment
+		var close;						// end of token
+		if (s[tokenPos+2] == '{')
+		{
+			if (s[tokenPos+3] == '{')
+			{
+				// Raw text {{{{ }}}}
+				var endPos = s.indexOf("}}}}", tokenPos);
+				if (endPos < 0)
+					throw new TokenError("Unclosed raw block", tokenPos);
+
+				// Greedy consume extra braces as part of the raw text
+				while (s[endPos + 4] == '}')
+					endPos++;
+
+				// Yield the preceding text
+				yield {
+					kind: "literal",
+					text: s.substr(p, tokenPos - p),
+				}
+
+				// Yield the raw text
+				yield {
+					kind: "literal",
+					text: s.substr(tokenPos + 4, endPos - (tokenPos + 4)),
+				}
+
+				// Handled
+				p = endPos + 4;
+				continue;
+			}
+			else
+			{
+				close = "}}}";
+				mode = 3;
+			}
+		}
+		else
+		{
+			close = "}}";
+			mode = 2;
+		}
+
+		var directiveKind = "";			// "#" or "/"
+		var directive = "";
+		var trimBefore = 0;
+		var trimAfter = 0;
+		var innerPos = tokenPos + mode;
+
+		// Handle {~...} for trim before
+		if (s[innerPos] == '~')
+		{
+			innerPos++;
+			trimBefore = true;
+		}
+
+		// Handle directives
+		if (mode == 2)
+		{
+			if (s[innerPos] == '#' || s[innerPos] == '/')
+			{
+				// Handle {{#...}} and {{/...}}
+				directiveKind = s[innerPos];
+				innerPos++;
+				directive = readIdentifier(s, innerPos);
+				innerPos += directive.length;
+			}
+			else if (s[innerPos] == '^')
+			{
+				// Handle {{^}} and {{^if }}
+				directiveKind = "#";
+				innerPos++;
+				if (readIdentifer(s, innerPos) == 'if')
+				{
+					directive = "elseif";
+					innerPos += 2;
+				}
+				else
+				{
+					directive = "if";
+				}
+			}
+			else
+			{
+				// Handle {{else}} and {{elseif}} (without #'s)
+				var id = readIndentifier(s, innerPos); 
+				if (id == "else" || id == "elseif")
+				{
+					directiveKind = "#";
+					directive = id;
+					innerPos += id.length;
+				}
+			}
+		}
+
+		// Skip expression
+		var innerEndPos = skipJavaScript(s, p);
+
+		// Check the end dilimiter matches
+		if (s.substr(innerEndPos, mode) != close)
+			throw new TokenError(`Misformed directive, expected ${close}`, endPos)
+
+		// Calculate outer end pos
+		var endPos = innerEndPos + mode;
+
+		// Strip of trailing ~
+		if (s[endPos-1] == '~')
+		{
+			trimAfter = 1;
+			innerEndPos--;
+		}
+
+		// Trimming before/after line/white space
+		if (trimBefore)
+		{
+			while (tokenPos > p && isWhiteSpace(s[tokenPos-1]))
+				tokenPos--;
+		}
+		if (trimAfter)
+		{
+			while (isWhiteSpace(endPos))
+				endPos++;
+		}
+		if (!trimBefore && !trimAfter && mode == 2)
+		{
+			[tokenPos, endPos] = consumeLineSpace(tokenPos, endPos);
+		}
+
+		// Yield preceding text
+		yield {
+			kind: "literal",
+			text: s.substr(p, tokenPos),
+		}
+
+		// Yield the token
+		if (directiveKind == '#')
+		{
+			yield {
+				kind: "directive",
+				directive: directive,
+				expression: s.substr(innerPos, innerEndPos - innerPos).trim(),
+			}
+		}
+		else if (directiveKind == '/')
+		{
+			yield {
+				kind: "closeDirective",
+				directive: directive,
+			}
+		}
+		else if (mode == 2)
+		{
+			yield {
+				kind: "encodedExpression",
+				expression: s.substr(innerPos, innerEndPos - innerPos).trim(),
+			}
+		}
+		else if (mode == 3)
+		{
+			yield {
+				kind: "rawExpression",
+				expression: s.substr(innerPos, innerEndPos - innerPos).trim(),
+			}
+		}
+		else
+		{
+			throw Error("Internal error");
+		}
+
+		// Moving on!
+		p = endPos;
+	}
+}
 
 //////////////////////////////////////////////////////////////////////////////////
 // MoeHelpers - functions used internally by generated template scripts
@@ -120,6 +508,26 @@ MoeHelpers.prototype.partial = function(model, context, scope, name, subModel)
 }
 
 
+function rollbackLeadingWhiteSpace(parts)
+{
+	if (parts.length == 0)
+		return;
+
+	var lastPart = parts[parts.length-1];
+
+	var pos = lastPart.length;
+	while (pos > 0)
+	{
+		if (lastPart[pos-1] == ' ' || lastPart[pos-1] == '\t')
+			pos--;
+		else if (lastPart[pos-1] == '\r' || lastPart[pos-1] == '\n')
+			break;
+		else
+			return;
+	}
+
+	parts[parts.length-1] = lastPart.substr(0, pos);
+}
 
 //////////////////////////////////////////////////////////////////////////////////
 // MoeEngine - Moe template engine
@@ -156,7 +564,20 @@ MoeEngine.prototype.compile = function(template)
 		// Consume text before directive
 		if (tag.index > lastIndex)
 		{
-			(blockType == 'code' ? code : parts).push(template.substr(lastIndex, tag.index - lastIndex));
+			switch (blockType)
+			{
+				case 'code':
+					code.push(template.substr(lastIndex, tag.index - lastIndex));
+					break;
+
+				case 'comment':
+					// Discard comments
+					break;
+					
+				default:
+					parts.push(template.substr(lastIndex, tag.index - lastIndex));
+					break;
+			}
 		}
 
 		// Update current position
@@ -175,6 +596,18 @@ MoeEngine.prototype.compile = function(template)
 			parts.push("${");
 			parts.push(directive.substr(3, directive.length - 6));
 			parts.push("}");
+			continue;
+		}
+
+		// Comment
+		if (directive.startsWith("{{!--") && directive.endsWith("--}}"))
+		{
+			if (template[lastIndex] == '\r')
+				lastIndex++;
+			if (template[lastIndex] == '\n')
+				lastIndex++;
+			re.lastIndex = lastIndex;
+			rollbackLeadingWhiteSpace(parts);
 			continue;
 		}
 
@@ -203,6 +636,12 @@ MoeEngine.prototype.compile = function(template)
 				continue;
 			}
 
+			// Inside comment block, only {{/code}} should do anything
+			if (blockType == "comment" && closeTag != "comment")
+			{
+				continue;
+			}
+
 			// Work out the expected closing tag type
 			var expectedCloseTag = blockType;
 			if (expectedCloseTag == "ifelse")
@@ -222,6 +661,10 @@ MoeEngine.prototype.compile = function(template)
 			switch (blockType)
 			{
 				case "code":
+					// nop
+					break;
+
+				case "comment":
 					// nop
 					break;
 
@@ -259,6 +702,10 @@ MoeEngine.prototype.compile = function(template)
 				code.push(tag[0]);
 				continue;
 			}
+			if (blockType == "comment")
+			{
+				continue;
+			}
 
 			// Split into directive and expression
 			var dirType = directive.substr(1).split(' ')[0];
@@ -269,6 +716,10 @@ MoeEngine.prototype.compile = function(template)
 			{
 				case "code":
 					blockTypeStack.push("code");
+					break;
+
+				case "comment":
+					blockTypeStack.push("comment");
 					break;
 
 				case "if":
@@ -378,6 +829,7 @@ MoeEngine.prototype.compile = function(template)
 			if (template[lastIndex] == '\n')
 				lastIndex++;
 			re.lastIndex = lastIndex;
+			rollbackLeadingWhiteSpace(parts);
 		}
 	}
 

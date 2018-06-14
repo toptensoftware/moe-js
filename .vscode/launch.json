@@ -19,7 +19,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceFolder}\\moe.js"
+            "program": "${workspaceFolder}\\debug.js"
         }
     ]
 }
