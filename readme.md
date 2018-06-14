@@ -369,6 +369,102 @@ You can also, pass an explicit object as the model to the partial template:
 {{> "UserDetails", model.user}}
 ```
 
+### Raw Text
+
+Raw text can be embedded in a template using `{{{{ }}}}`:
+
+```html
+<pre>
+{{{{<h1>{{model.title}}</h1>    
+<p>This is an example Moe.JS template</p>}}}}
+</pre>
+```
+
+Note how the `{{model.title}}` directive was ignored and passed through:
+
+```html
+<pre>
+<h1>{{model.title}}</h1>
+<p>This is an example Moe.JS template</p>
+</pre>
+```
+
+### White Space Control
+
+You can strip out whitespace between Moe.JS directives and other parts of the template by placing a `~`
+character inside the start or end of any `{{ }}` or `{{{ }}}` directive.
+
+A `~` at the start of a directive means to strip out any whitespace before the directive (including spaces,
+tabs, line feeds and carriage returns).  A `~` at the end of a directive causes whitespace after the directive
+to be stripped.
+
+```html
+    {{#if model.inStock~}}
+    IN STOCK
+    {{~^~}}
+    OUT OF STOCK
+    {{~/if}}
+```
+
+is equivalent to:
+
+```html
+    {{#if model.inStock}}IN STOCK{{^}}OUT OF STOCK{{/if}}
+```
+
+Note too that Moe.JS will automatically remove line space around control directives that are 
+on a line by themselves:
+
+```html
+<div>
+    {{#if model.inStock}}
+    IN STOCK
+    {{^}}
+    OUT OF STOCK
+    {{/if}}
+<div>
+```
+
+Produces:
+
+```
+<div>
+    IN STOCK
+<div>
+```
+
+
+### Escaping Braces
+
+Moe.JS doesn't provide any support for escaping braces outside of directives.  Instead, just use a simple
+expression:
+
+```html
+{{"{{"}} This is double braced }}
+```
+
+Produces:
+
+```html
+{{ This is double braced }}
+```
+
+Single braces don't usually need to be escaped, unless they're immediately before a Moe.JS directive:
+
+```html
+{{"{"}}{{model.title}}{{"}"}}
+```
+
+Produces:
+
+```html
+{TheTitle}
+```
+
+But you could also just do this to strip the extra whitespace:
+
+{ {{~model.title~}} }
+
 ## API Reference
 
 When you import moe-js, the returned object is the default instance of the MoeEngine class.  
@@ -608,6 +704,16 @@ exist in Moe.JS because expressions are plain JavaScript.
 
 In Moe.JS, these paths generally aren't required since you can name loop variables explicitly and you
 can always get back to the root `model` object.
+
+### Fixed Escaped Braces
+
+Moe.JS doesn't support escaping braces with a backslash.  Replace with a JavaScript Expression:
+
+```html
+\{{{model.title}}       <- Handlebars
+{{'{'}}{{model.title}}  <- Moe.JS
+{ {{~model.title}}      <- Moe.JS or Handlebars
+```
 
 ## Internals
 

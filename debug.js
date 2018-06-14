@@ -1,22 +1,17 @@
 `use strict`
 var moe = require('./moe');
 
-async function test()
-{
     var template = moe.compile(`
-    {{#async}}
-    {{#code}}
-        var promise =  new Promise((resolve, reject) => {
-            setTimeout(() => resolve("Hello"), 5000);
-        })
-    {{/code}}
-    
-    {{await promise}}
+<div>
+    {{#if model.inStock}}
+    IN STOCK
+    {{^}}
+    OUT OF STOCK
+    {{/if}}
+<div>
     `);
-    console.log(await template({}));
-}
 
-test();
+    console.log(template({inStock:true}));
 
 
 
