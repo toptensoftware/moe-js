@@ -34,8 +34,6 @@ MoeHelpers.prototype.encode = function(str)
 	});
 }
 
-
-
 // Helper to iterate an iterable or call an alternate if iterable is empty
 MoeHelpers.prototype.each = function(outerScope, iter, cbItem, cbEmpty)
 {
@@ -69,30 +67,29 @@ MoeHelpers.prototype.each = function(outerScope, iter, cbItem, cbEmpty)
 		// If any items process them
 		if (scope.items.length)
 		{
-			var parts = [];
 			for (scope.index = 0; scope.index<scope.items.length; scope.index++)
 			{
 				scope.first = scope.index == 0;
 				scope.last = scope.index == scope.items.length-1;
 				scope.item = scope.items[scope.index];
-				parts.push(cbItem(scope, scope.item));
+				cbItem(scope, scope.item);
 			}
-			return parts.join('');
+			return;
 		}
 	}
 
-	return cbEmpty(scope, undefined);
+	if (cbEmpty)
+		return cbEmpty(scope);
 }
 
 // Helper to iterate an iterable or call an alternate if iterable is empty
 MoeHelpers.prototype.with = function(expr, cbItem, cbElse)
 {
 	if (expr)
-		return cbItem(expr);
+		cbItem(expr);
 	else if (cbElse)
-		return cbElse();
+		cbElse();
 }
-
 
 // Render a partial
 MoeHelpers.prototype.partial = function(model, context, scope, name, subModel)
@@ -127,28 +124,6 @@ MoeHelpers.prototype.partial = function(model, context, scope, name, subModel)
 	return template(subModel, context);
 }
 
-
-function rollbackLeadingWhiteSpace(parts)
-{
-	if (parts.length == 0)
-		return;
-
-	var lastPart = parts[parts.length-1];
-
-	var pos = lastPart.length;
-	while (pos > 0)
-	{
-		if (lastPart[pos-1] == ' ' || lastPart[pos-1] == '\t')
-			pos--;
-		else if (lastPart[pos-1] == '\r' || lastPart[pos-1] == '\n')
-			break;
-		else
-			return;
-	}
-
-	parts[parts.length-1] = lastPart.substr(0, pos);
-}
-
 //////////////////////////////////////////////////////////////////////////////////
 // MoeEngine - Moe template engine
 
@@ -169,8 +144,8 @@ MoeEngine.prototype.express = function(app)
 // Compile a string template, returns a function(model, context)
 MoeEngine.prototype.compile = function(template)
 {
-	var parts = [];
-	var code = [];
+	var parts = "";
+	var code = "";
 	var blockTypeStack = [ "none" ];
 
 	for (var token of Tokenizer.tokenize(template))
@@ -201,57 +176,44 @@ MoeEngine.prototype.compile = function(template)
 		switch (token.kind)
 		{
 			case "literal":
-				parts.push(token.text);
+				parts += `$buf += ${JSON.stringify(token.text)};\n`;
 				break;
 
 			case ">":
 				// Invoke partial
-				parts.push('${helpers.partial(model, context, scope, ');
-				parts.push(token.expression);
-				parts.push(')}');
+				parts += `$buf += helpers.partial(model, context, scope, ${token.expression};\n`;
 				break;
 
 			case "{{}}":
 				// Encoded string output
-				parts.push("${$encode(");
-				parts.push(token.expression);
-				parts.push(")}");
+				parts += `$buf += $encode(${token.expression});\n`;
 				break;
 
 			case "{{{}}}":
-				parts.push("${");
-				parts.push(token.expression);
-				parts.push("}");
+				parts += `$buf += ${token.expression};\n`;
 				break;
 
 			case "#code":
-				code.push(token.text);
+				code += token.text;
 				break;
 
 			case "#if":
 				blockTypeStack.push("if");
-				parts.push("${(function() { if (");
-				parts.push(token.expression);
-				parts.push(") { return `");
+				parts += `if (${token.expression}) {\n`;
 				break;
 
 			case "/if":
-				if (blockType == "if")
-					parts.push("`; } else return ''; })()}");
-				else
-					parts.push("`; }})()}");
+				parts += "}\n";
 				blockTypeStack.pop();
 				break;
 
 			case "#unless":
 				blockTypeStack.push("unless");
-				parts.push("${(function() { if (!(");
-				parts.push(token.expression);
-				parts.push(")) { return `");
+				parts += `if (!(${token.expression})) {\n`;
 				break;
 
 			case "/unless":
-				parts.push("`; } else return ''; })()}");
+				parts += "}\n";
 				blockTypeStack.pop();
 				break;
 
@@ -267,16 +229,11 @@ MoeEngine.prototype.compile = function(template)
 				}
 
 				blockTypeStack.push("each");
-				parts.push("${helpers.each(scope, ");
-				parts.push(token.expression);
-				parts.push(`, function(scope, ${itemName}) { return \``);
+				parts += `helpers.each(scope, ${token.expression}, function(scope, ${itemName}) {\n`;
 				break;
 
 			case "/each":
-				if (blockType == "each")
-					parts.push("`;}, function(scope, item) { return ''; })}");
-				else
-					parts.push("`;})}");
+				parts += `});\n`;
 				blockTypeStack.pop();
 				break;
 
@@ -292,13 +249,11 @@ MoeEngine.prototype.compile = function(template)
 				}
 
 				blockTypeStack.push("with");
-				parts.push("${helpers.with(");
-				parts.push(token.expression);
-				parts.push(`, function(${itemName}) { return \``);
+				parts += `helpers.with(${token.expression}, function(${itemName}) { `;
 				break;
 				
 			case "/with":
-				parts.push("`;})}");
+				parts += "});";
 				blockTypeStack.pop();
 				break;
 
@@ -306,17 +261,17 @@ MoeEngine.prototype.compile = function(template)
 				if (blockType == "if")
 				{
 					blockTypeStack[blockTypeStack.length -1 ] = "ifelse";
-					parts.push("`; } else { return `");
+					parts += "} else {\n";
 				}
 				else if (blockType == "each")
 				{
 					blockTypeStack[blockTypeStack.length -1 ] = "eachelse";
-					parts.push("`;}, function(item) { return `");
+					parts += "}, function(item) {\n";
 				}
 				else if (blockType == "with")
 				{
 					blockTypeStack[blockTypeStack.length -1 ] = "withelse";
-					parts.push("`;}, function() { return `");
+					parts += `}, function(scope) {\n`;
 				}
 				else
 					throw new Error(`Unexpected else directive`);
@@ -325,9 +280,7 @@ MoeEngine.prototype.compile = function(template)
 			case "#elseif":
 				if (blockType == "if")
 				{
-					parts.push("`; } else if (")
-					parts.push(token.expression)
-					parts.push(") { return `");
+					parts += `} else if (${token.expression}) {\n`;
 				}
 				else
 					throw new Error(`Unexpected elseif directive`);
@@ -346,10 +299,17 @@ MoeEngine.prototype.compile = function(template)
 
 	// Compile it
 	var finalCode;
-	finalCode  = `var scope = null;\n`;
+	finalCode = `var scope = null;\n`;
 	finalCode += `var $encode = helpers.encode;\n`;
-	finalCode += `${code.join("")}\n`;
-	finalCode += `return \`${parts.join("")}\`\n`;
+	finalCode += `var $buf = "";\n`;
+	finalCode += code;
+	finalCode += "\n";
+	finalCode += parts;
+	finalCode += "\n";
+	finalCode += `return $buf;`;
+
+//console.log(finalCode);
+
 	var compiledFn = Function(['helpers', 'model', 'context'], finalCode);
 
 	// Stub function to setup model etc...
