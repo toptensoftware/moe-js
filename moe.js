@@ -91,8 +91,8 @@ MoeHelpers.prototype.with = function(expr, cbItem, cbElse)
 		cbElse();
 }
 
-// Render a partial
-MoeHelpers.prototype.partial = function(model, context, scope, name, subModel)
+// Render a partial (Sync version)
+MoeHelpers.prototype.partialSync = function(model, context, scope, name, subModel)
 {
 	// Resolve subModel
 	if (!subModel && scope)
@@ -122,6 +122,51 @@ MoeHelpers.prototype.partial = function(model, context, scope, name, subModel)
 
 	// Invoke it
 	return template(subModel, context);
+}
+
+// Render a partial (Async version)
+MoeHelpers.prototype.partialAsync = async function(model, context, scope, name, subModel)
+{
+	// Resolve subModel
+	if (!subModel && scope)
+		subModel = scope.item;
+	if (!subModel)
+		subModel = model;
+
+	// Call hooks
+	if (context.$moe)
+	{
+		// Decorate the subModel? (used by express binding to attach
+		// 		locals back onto the sub-subModel)
+		if (subModel !== model)
+		{
+			// Try async decorate first
+			if (context.$moe.decoratePartialModelAsync)
+			{
+				subModel = await context.$moe.decoratePartialModelAsync(subModel);
+			}
+			else if (context.$moe.decoratePartialModel)
+			{
+				subModel = context.$moe.decoratePartialModel(subModel);
+			}
+		}
+
+		// Resolve the partial path?
+		if (context.$moe.resolvePartialPathAsync)
+		{
+			name = await context.$moe.resolvePartialPathAsync(name);
+		}
+		else if (context.$moe.resolvePartialPath)
+		{
+			name = context.$moe.resolvePartialPathname(name);
+		}
+	}
+
+	// Load the template
+	var template = await this.moe.compileFileAsync(name, { asyncTemplate: true });
+
+	// Invoke it
+	return await template(subModel, context);
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -182,7 +227,14 @@ MoeEngine.prototype.compile = function(template, options)
 
 			case ">":
 				// Invoke partial
-				parts += `$buf += helpers.partial(model, context, scope, ${token.expression});\n`;
+				if (options.asyncTemplate)
+				{
+					parts += `$buf += await helpers.partialAsync(model, context, scope, ${token.expression});\n`;
+				}
+				else
+				{
+					parts += `$buf += helpers.partialSync(model, context, scope, ${token.expression});\n`;
+				}
 				break;
 
 			case "{{}}":
@@ -426,6 +478,19 @@ MoeEngine.prototype.compileFile = function(filename, options, cb)
 	}
 }
 
+// Compile a file (async)
+MoeEngine.prototype.compileFileAsync = function(filename, options, cb)
+{
+	return new Promise((resolve, reject) =>{
+		this.compileFile(filename, options, function(err, result) {
+			if (err)
+				reject(err);
+			else
+				resolve(result);
+		});
+	});
+}
+
 // Compile and cache a file (sync)
 MoeEngine.prototype.compileFileSync = function(filename, options)
 {
@@ -551,27 +616,25 @@ function ExpressMiddleware(moe, app)
 {
 	return function middleware(filename, options, cb)
 	{
-		// Don't cache templates during development
-		if (!options.cache)
-		{
-			moe.discardTemplateCache();
-		}
+		Promise.resolve((async () =>  {
 
-		// Setup hooks to resolve partial paths and decorate
-		// sub-models before passing to partials
-		var context = {
-			$moe: new MoeExpressHooks(moe, app, options),
-		};
+			// Don't cache templates during development
+			if (!options.cache)
+			{
+				moe.discardTemplateCache();
+			}
 
-		// Compile and run!
-		moe.compileFile(filename, 'UTF8', function(err, template) {
+			// Setup hooks to resolve partial paths and decorate
+			// sub-models before passing to partials
+			var context = {
+				$moe: new MoeExpressHooks(moe, app, options),
+			};
 
-			// Error
-			if (err)
-				return cb(err);	
+			// Compile and run!
+			var template = await moe.compileFileAsync(filename, { asyncTemplate: true });
 
 			// Process the body
-			var body = template(options, context);
+			var body = await template(options, context);
 
 			// Work out the layout file
 			var layout = options.layout;
@@ -582,25 +645,18 @@ function ExpressMiddleware(moe, app)
 
 			// No layout?
 			if (!layout)
-				return cb(null, body);
+				return body;
 
 			// Find the layout file
 			var layoutFile = context.$moe.resolveViewPath(layout, options.settings.views);
-			moe.compileFile(layoutFile, 'UTF8', function(err, templateLayout) {
+			var templateLayout = await moe.compileFileAsync (layoutFile, { asyncTemplate: true });
 
-				// Error
-				if (err)
-					return cb(err);
+			// Pass on the inner body
+			options.body = body;
 
-				// Pass on the inner body
-				options.body = body;
+			return await templateLayout(options, context);
 
-				// Run the layout
-				cb(null, templateLayout(options, context));
-
-			});
-
-		});
+		})()).then(x=>cb(null, x)).catch(cb);
 	}
 }
 

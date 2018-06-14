@@ -53,6 +53,12 @@ Or, do it synchronously
 var template = moe.compileFileSync("mytemplate.moe", "UTF8");
 ```
 
+Or, using async/await:
+
+```Javascript
+var template = await moe.compileFileAsync("mytemplate.moe", "UTF8");
+```
+
 Once you have a template, you can execute it:
 
 ```Javascript
@@ -463,7 +469,9 @@ Produces:
 
 But you could also just do this to strip the extra whitespace:
 
+```html
 { {{~model.title~}} }
+```
 
 ## API Reference
 
@@ -533,6 +541,19 @@ function moe.compileFileSync(filename, options)
 * returns the compiled template, or throws an exception
 
 
+### moe.compileFileAsync
+
+Promise version of the `moe.compileFile` function:
+
+```Javascript
+async function moe.compileFileAsync(filename, options)
+```
+
+* `filename` is the file to compile
+* `options` - optional compile options (see below)
+* returns a Promise for the compiled template, or throws an exception
+
+
 ### moe.discardTemplateCache
 
 Discards the contents of the internal template cache.  Call this function if any of the template
@@ -548,7 +569,7 @@ A set of functions and objects that are available to template scripts.  See belo
 
 ## Compile Options
 
-Each of the compile methods has an options parameter which accepts an object with the following
+Each of the compile methods has an `options` parameter which accepts an object with the following
 members:
 
 ```Javascript
@@ -560,8 +581,8 @@ members:
 
 The values shown above are the default values used if not explicitly specified.
 
-You can also pass a boolean value which will set the asyncTemplate option, or a string which
-will set the encoding option.  eg:
+You can also pass a boolean value which will set the `asyncTemplate` option, or a string which
+will set the `encoding` option.  eg:
 
 ```Javascript
     // compile an async template
@@ -649,6 +670,11 @@ A simple minimal layout might look like this:
 </html>
 ```
 
+### Support for Async
+
+Moe.JS's Express middleware compiles view templates as async templates, so you can use `await` in your views!
+
+
 ## Converting Handlebar Templates to Moe.JS
 
 As mentioned above, Moe.JS doesn't claim to be compatible with Mustache/Handlebars but does
@@ -734,6 +760,9 @@ before the partial is rendered.
 These hooks are used by Moe-js's Express integration to look for partials in the views subfolder and to 
 merge models with local settings.
 
+Each function can be supplied in a Sync and optionally an Async version.  The async versions will only be called
+if the template was compiled as an async template and if not present the sync version will be used as a fallback.
+
 ```Javascript
 var context = 
 {
@@ -746,6 +775,11 @@ var context =
             return path.join("./views/partialViews", partialTemplateName);
         },
 
+        resolvePartialPathAsync: async function(partialTemplteName) {
+            // Async version of above.  Only called on async templates
+            // and will fall back to sync version if not present
+        },
+
         // Provides an opportunity to "decorate" the a model object before it's
         // passed to a partial.
         decoratePartialModel: function(model) {
@@ -755,7 +789,12 @@ var context =
                 "someCustomSettingsForThePartial": "Whatever",
                 "somethingElse": 99
             }, model);
-        }
+        },
+
+        decoratePartialModelAsync: async function(model) {
+            // Async version of above.  Only called on async templates
+            // and will fall back to sync version if not present
+        },
     }  
 };
 
