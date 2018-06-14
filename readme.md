@@ -144,6 +144,11 @@ var result = await template({
 assert(result == "Promise result: Hello");
 ```
 
+Note: don't confuse async templates with the `moe.compileFileAsync` function:
+
+* `compileFileAsync` returns a promise for the compiled template function. 
+* Async templates allow the use of `await` within the template itself.
+
 ## Template Language
 
 Moe-js templates are similar to Handlebars templates, but there are some important differences.  The
