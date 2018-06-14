@@ -27,7 +27,7 @@ Moe-js doesn't claim to be compatible with Handlebars but the syntax is very sim
 templates can be converted fairly easily (certainly more easily than switching
 to a completely different view engine).
 
-## Using Moe.JS with Express
+## Using Moe-js with Express
 
 You can use Moe-js as a view engine in Express:
 
@@ -75,10 +75,10 @@ A simple minimal layout might look like this:
 
 ### Support for Async
 
-Moe.JS's Express middleware compiles view templates as async templates, so you can use `await` in your views!
+Moe-js's Express middleware compiles view templates as async templates, so you can use `await` in your views!
 
 
-## Using Moe.JS Directly
+## Using Moe-js Directly
 
 Before executing a template, you must first compile it.  
 
@@ -119,7 +119,7 @@ assert(html == "<h1>Hello, from Moe-js</h1>")
 
 ## Async Templates
 
-By default, templates are compiled to be executed syncrhonously, but moe.js can also build
+By default, templates are compiled to be executed syncrhonously, but Moe-js can also build
 an async template that returns a promise.  This lets you use `async` statements within the
 template itself.  To compile an async template, pass either `true` or `{ asyncTemplate: true }` as 
 the second parameter to any of the compile functions.
@@ -202,7 +202,7 @@ You can embed comments as follows:
 {{!-- This is a comment --}}
 ```
 
-Note: comment blocks can be used to surround other moe.js directives - ie: they're
+Note: comment blocks can be used to surround other Moe-js directives - ie: they're
 an effective way to "comment out" entire sections of a template.
 
 ### The Special `model` Variable 
@@ -267,7 +267,7 @@ As an alternative for `{{#else}}` and `{{#elseif}}` you can use `{{^}}` and `{{^
 {{/if}}
 ```
 
-moe.js doesn't really need an `{{#unless}}` block (because it's easy to just use `{{#if !(expr)}}`) but
+Moe-js doesn't really need an `{{#unless}}` block (because it's easy to just use `{{#if !(expr)}}`) but
 includes one anyway:
 
 ```html
@@ -438,7 +438,7 @@ Raw text can be embedded in a template using `{{{{ }}}}`:
 ```html
 <pre>
 {{{{<h1>{{model.title}}</h1>    
-<p>This is an example Moe.JS template</p>}}}}
+<p>This is an example Moe-js template</p>}}}}
 </pre>
 ```
 
@@ -447,13 +447,13 @@ Note how the `{{model.title}}` directive was ignored and passed through:
 ```html
 <pre>
 <h1>{{model.title}}</h1>
-<p>This is an example Moe.JS template</p>
+<p>This is an example Moe-js template</p>
 </pre>
 ```
 
 ### White Space Control
 
-You can strip out whitespace between Moe.JS directives and other parts of the template by placing a `~`
+You can strip out whitespace between Moe-js directives and other parts of the template by placing a `~`
 character inside the start or end of any `{{ }}` or `{{{ }}}` directive.
 
 A `~` at the start of a directive means to strip out any whitespace before the directive (including spaces,
@@ -474,7 +474,7 @@ is equivalent to:
     {{#if model.inStock}}IN STOCK{{^}}OUT OF STOCK{{/if}}
 ```
 
-Note too that Moe.JS will automatically remove line space around control directives that are 
+Note too that Moe-js will automatically remove line space around control directives that are 
 on a line by themselves:
 
 ```html
@@ -498,7 +498,7 @@ Produces:
 
 ### Escaping Braces
 
-Moe.JS doesn't provide any support for escaping braces outside of directives.  Instead, just use a simple
+Moe-js doesn't provide any support for escaping braces outside of directives.  Instead, just use a simple
 expression:
 
 ```html
@@ -511,7 +511,7 @@ Produces:
 {{ This is double braced }}
 ```
 
-Single braces don't usually need to be escaped, unless they're immediately before a Moe.JS directive:
+Single braces don't usually need to be escaped, unless they're immediately before a Moe-js directive:
 
 ```html
 {{"{"}}{{model.title}}{{"}"}}
@@ -660,7 +660,7 @@ will set the `encoding` option.  eg:
 You can write helper functions to be used in your templates by either declaring them inside the template using `{{#code}}` blocks (as described above), or by attaching functions to the `moe.helpers` object:
 
 ```Javascript
-var moe = require('moe-je');
+var moe = require('moe-js');
 moe.helpers.FormatPrice = function (val)
 {
     if (val == 0)
@@ -680,10 +680,10 @@ Note that you should NOT replace the existing `.helpers` instance - it contains 
 functions used by the generated template function.
 
 
-## Converting Handlebar Templates to Moe.JS
+## Converting Handlebar Templates to Moe-js
 
-As mentioned above, Moe.JS doesn't claim to be compatible with Handlebars but does
-have a similar syntax which lends it to easy conversion of existing templates to Moe.JS.
+As mentioned above, Moe-js doesn't claim to be compatible with Handlebars but does
+have a similar syntax which lends it to easy conversion of existing templates to Moe-js.
 
 This section explains common things to watch out for if you're porting existing Handlebars
 templates.
@@ -691,7 +691,7 @@ templates.
 ### Use The `model.` Variable To Access Passed Data
 
 This is probably the biggest impact on existing templates.  Unlike Handlebars which automatically
-maps referenced variables to the current scope, Moe.JS doesn't provide this - primarily because
+maps referenced variables to the current scope, Moe-js doesn't provide this - primarily because
 under the covers this is straight JavaScript code.
 
 While this is inconvenient for porting templates, it does make the templates more explicit, 
@@ -699,51 +699,51 @@ faster and facilitates the use of any JavaScript expression.
 
 ```
 {{title}}           <- Handlebars
-{{model.title}}     <- Moe.JS
+{{model.title}}     <- Moe-js
 ```
 
 ### Rewrite Helper Functions
 
-Helper functions are implemented differently in Moe.JS.   See above for how to write Moe.JS helpers.
+Helper functions are implemented differently in Moe-js.   See above for how to write Moe-js helpers.
 
 Don't forget you can also use in-template `{{#code}}` blocks for one off helpers.
 
 ### Quote Referenced Partials
 
-Moe.JS's partial directive expects a JavaScript expression which means the referenced template
+Moe-js's partial directive expects a JavaScript expression which means the referenced template
 name must be quoted:
 
 ```
 {{> partial}}       <- Handlebars
-{{> "partial"}}     <- Moe.JS
+{{> "partial"}}     <- Moe-js
 ```
 
 ### Replace Shorthand Comments
 
-Handlebars allows two kinds of comments `{{!-- --}}` and `{{! }}`.  Moe.JS only 
+Handlebars allows two kinds of comments `{{!-- --}}` and `{{! }}`.  Moe-js only 
 supports the first format, since the second format might be a valid JavaScript expression (not operator).
 
 ```
-{{!-- Comment  --}} <- Handlebars or Moe.JS
+{{!-- Comment  --}} <- Handlebars or Moe-js
 {{! Comment }}      <- Handlebars only
 ```
 
 ### Replace Handlebars Style Paths
 
 Handlebars uses "paths" (eg: `.`,  `..` etc...) to reference the current and outer scopes.  These don't 
-exist in Moe.JS because expressions are plain JavaScript.
+exist in Moe-js because expressions are plain JavaScript.
 
-In Moe.JS, these paths generally aren't required since you can name loop variables explicitly and you
+In Moe-js, these paths generally aren't required since you can name loop variables explicitly and you
 can always get back to the root `model` object.
 
 ### Fixed Escaped Braces
 
-Moe.JS doesn't support escaping braces with a backslash.  Replace with a JavaScript Expression:
+Moe-js doesn't support escaping braces with a backslash.  Replace with a JavaScript Expression:
 
 ```
 \{{{model.title}}       <- Handlebars
-{{'{'}}{{model.title}}  <- Moe.JS
-{ {{~model.title}}      <- Moe.JS or Handlebars
+{{'{'}}{{model.title}}  <- Moe-js
+{ {{~model.title}}      <- Moe-js or Handlebars
 ```
 
 ## Internals
