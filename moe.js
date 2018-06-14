@@ -427,7 +427,7 @@ MoeEngine.prototype.compileFile = function(filename, options, cb)
 }
 
 // Compile and cache a file (sync)
-MoeEngine.prototype.compileFileSync = function(filename, encoding)
+MoeEngine.prototype.compileFileSync = function(filename, options)
 {
 	// Qualify with extension
 	if (path.extname(filename).length == 0)
