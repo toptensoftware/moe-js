@@ -395,7 +395,7 @@ MoeEngine.prototype.compileFile = function(filename, options, cb)
 	options = normalizeOptions(options);
 
 	// Check cache
-	var cache = options.asyncTemplates ? this.asyncTemplates : this.syncTemplate;
+	var cache = options.asyncTemplates ? this.asyncTemplates : this.syncTemplates;
 	var template = cache[filename];
 
 	if (template)
@@ -438,7 +438,7 @@ MoeEngine.prototype.compileFileSync = function(filename, encoding)
 	// Normalize options
 	options = normalizeOptions(options);
 
-	var cache = options.asyncTemplates ? this.asyncTemplates : this.syncTemplate;
+	var cache = options.asyncTemplates ? this.asyncTemplates : this.syncTemplates;
 	var template = cache[filename];
 
 	// Already compiled?
