@@ -8,12 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Run Tests",
-            "runtimeExecutable": "npm",
-            "runtimeArgs": [
-                "run-script",
-                "test"
-            ],
-            "port": 9229
+            "program": "${workspaceFolder}/node_modules/jest/bin/jest.js",
         },
         {
             "type": "node",

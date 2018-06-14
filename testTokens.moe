@@ -1,0 +1,18 @@
+line1
+{{expr}}
+{{{expr}}}
+{{#if something}}
+{{#else}}
+{{else}}
+{{^}}
+{{^if}}
+{{/if}}
+{{"{{"}}
+{{"}}"}}
+pre   {{~blah~}}   post
+{{!--- This is a comment --}}
+{{{{RAW {{ }} TEXT}}}}
+{{#code}}
+This is some code {{#if this should be ignore by the tokenizer}}
+{{/code}}
+{{ > "Partial" }}

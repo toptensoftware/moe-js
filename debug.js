@@ -1,7 +1,11 @@
-var str = "Hello \\ \n \t ${stuff} world";
+`use strict`
+var fs = require('fs');
 
-var str2 = `Stuff \`blah\` \${stuff} \n\twhatever`;
+var Tokenizer = require('./tokenizer').Tokenizer;
 
-var encoded = JSON.stringify(str).slice(1, -1).replace(/\$\{/g, "\\${").replace(/`/g, "\\`");
+var template = fs.readFileSync("testTokens.moe", "utf8");
+for (var t of Tokenizer.tokenize(template))
+{
+    console.log(t);
+}
 
-console.log(str2);

@@ -1,4 +1,127 @@
-var moe = require('moe-js');
+var moe = require('./moe');
+var Tokenizer = require('./tokenizer').Tokenizer;
+var fs = require('fs');
+
+test("Skip linespace", () => {
+
+    expect(Tokenizer.skipLineSpace(".....     $", 5)).toBe(10);
+    expect(Tokenizer.skipLineSpace(".....     \r\n", 5)).toBe(10);
+
+});
+
+test("Skip whitespace", () => {
+
+    expect(Tokenizer.skipWhiteSpace(".....     $", 5)).toBe(10);
+    expect(Tokenizer.skipWhiteSpace(".....     \t\r\n", 5)).toBe(13);
+
+});
+
+test("Read identifier", () => {
+
+    expect(Tokenizer.readIdentifier(".....identifier ", 5)).toBe("identifier");
+    expect(Tokenizer.readIdentifier(".....identifier\t", 5)).toBe("identifier");
+    expect(Tokenizer.readIdentifier(".....identifier()", 5)).toBe("identifier");
+
+});
+
+test("Skip String (double quoted)", () => {
+
+    expect(() => Tokenizer.skipString('....."12345\0', 5)).toThrowError();
+    expect(() => Tokenizer.skipString('....."12345\n', 5)).toThrowError();
+    expect(() => Tokenizer.skipString('....."12345\r', 5)).toThrowError();
+    expect(Tokenizer.skipString('....."12345"zzz', 5)).toBe(12);
+    expect(Tokenizer.skipString('....."1\\"45"zzz', 5)).toBe(12);
+    expect(Tokenizer.skipString('....."1\\\'45"zzz', 5)).toBe(12);
+
+});
+
+test("Skip String (single quoted)", () => {
+
+    expect(() => Tokenizer.skipString(".....'12345\0", 5)).toThrow();
+    expect(() => Tokenizer.skipString(".....'12345\n", 5)).toThrow();
+    expect(() => Tokenizer.skipString(".....'12345\r", 5)).toThrow();
+    expect(Tokenizer.skipString(".....'12345'", 5)).toBe(12);
+    expect(Tokenizer.skipString(".....'1\\\"45'", 5)).toBe(12);
+    expect(Tokenizer.skipString(".....'1\\'45'", 5)).toBe(12);
+
+});
+
+test("Skip JavaScript", () => {
+
+    expect(Tokenizer.skipJavaScript(".....12345", 5)).toBe(10);
+    expect(Tokenizer.skipJavaScript(".....12345}", 5)).toBe(10);
+    expect(Tokenizer.skipJavaScript(".....{12345}}", 5)).toBe(12);
+    expect(Tokenizer.skipJavaScript(".....{{12345}}}", 5)).toBe(14);
+    expect(Tokenizer.skipJavaScript(".....(12345)", 5)).toBe(12);
+    expect(Tokenizer.skipJavaScript(".....(12345))", 5)).toBe(12);
+    expect(Tokenizer.skipJavaScript(".....((12345)))", 5)).toBe(14);
+    expect(Tokenizer.skipJavaScript(".....[12345]", 5)).toBe(12);
+    expect(Tokenizer.skipJavaScript(".....[12345]]", 5)).toBe(12);
+    expect(Tokenizer.skipJavaScript(".....[[12345]]]", 5)).toBe(14);
+    expect(Tokenizer.skipJavaScript(".....'\\''", 5)).toBe(9);
+    expect(Tokenizer.skipJavaScript('....."\\""', 5)).toBe(9);
+});
+
+test("Skip String (template string)", () => {
+
+    expect(() => Tokenizer.skipTemplateString("`.....\0", 5)).toThrow();
+
+    expect(Tokenizer.skipTemplateString(".....`123\r5`zzz", 5)).toBe(12);
+    expect(Tokenizer.skipTemplateString(".....`123\n5`zzz", 5)).toBe(12);
+    expect(Tokenizer.skipTemplateString(".....`123\n5`zzz", 5)).toBe(12);
+    expect(Tokenizer.skipTemplateString(".....`123${expr}456`zzz", 5)).toBe(20);
+    expect(Tokenizer.skipTemplateString(".....`123${'``'}456`zzz", 5)).toBe(20);
+    expect(Tokenizer.skipTemplateString('.....`123${"``"}456`zzz', 5)).toBe(20);
+    expect(Tokenizer.skipTemplateString('.....`123${{{}}}456`zzz', 5)).toBe(20);
+    expect(Tokenizer.skipTemplateString('.....`\\${${expr}456`zzz', 5)).toBe(20);
+    
+});
+
+test("Consume line space", () => {
+
+    expect(Tokenizer.consumeLineSpace("     12345     ", 5, 10)).toEqual(expect.arrayContaining([0, 15]));
+    expect(Tokenizer.consumeLineSpace("     12345     \r\n", 5, 10)).toEqual(expect.arrayContaining([0, 17]));
+    expect(Tokenizer.consumeLineSpace("\r\n   12345     \r\n", 5, 10)).toEqual(expect.arrayContaining([2, 17]));
+    expect(Tokenizer.consumeLineSpace("pre  12345     \r\n", 5, 10)).toEqual(expect.arrayContaining([5,10]));
+    expect(Tokenizer.consumeLineSpace("     12345 post\r\n", 5, 10)).toEqual(expect.arrayContaining([5,10]));
+
+});
+
+test("Tokenizer", () => {
+
+    var template = fs.readFileSync("testTokens.moe", "utf8");
+    var expected = [
+        { kind: 'literal', text: 'line1\r\n' },
+        { kind: '{{}}', expression: 'expr' },
+        { kind: '{{{}}}', expression: 'expr' },
+        { kind: 'literal', text: '\r\n' },
+        { kind: '#if', expression: 'something' },
+        { kind: '#else', expression: '' },
+        { kind: '#else', expression: '' },
+        { kind: '#else', expression: '' },
+        { kind: '#elseif', expression: '' },
+        { kind: '/if' },
+        { kind: '{{}}', expression: '"{{"' },
+        { kind: '{{}}', expression: '"}}"' },
+        { kind: 'literal', text: 'pre' },
+        { kind: '{{}}', expression: 'blah' },
+        { kind: 'literal', text: 'post\r\n' },
+        { kind: 'literal', text: 'RAW {{ }} TEXT' },
+        { kind: 'literal', text: '\r\n' },
+        { kind: '#code', text: 'This is some code {{#if this should be ignore by the tokenizer}}\r\n' },
+        { kind: '>', expression: '"Partial"' },
+    ]
+
+    var actual = [];
+    for (var token of Tokenizer.tokenize(template))
+    {
+        delete token.offset;
+        actual.push(token);
+    }
+
+    expect(actual).toEqual(expected);
+});
+
 
 test("Basic output", () => {
     expect(moe.compile("<html>")({})).toBe("<html>");
@@ -20,26 +143,6 @@ test("Comments (single line)", () => {
     `);
     
     var result = template({});
-
-    console.log(result);
-
-    expect(result).toMatch(/PRE/);
-    expect(result).not.toMatch(/Comment/);
-    expect(result).toMatch(/POST/);
-})
-
-test("Comments (block)", () => {
-    var template = moe.compile(`
-    PRE
-    {{#comment}}
-    This is a comment
-    {{/comment}}
-    POST
-    `);
-    
-    var result = template({});
-
-    console.log(result);
 
     expect(result).toMatch(/PRE/);
     expect(result).not.toMatch(/Comment/);
@@ -539,3 +642,4 @@ test("With/Else Block (false)", () => {
     expect(result).toMatch(/FALSE/);
 
 });
+

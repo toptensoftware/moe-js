@@ -19,6 +19,7 @@
 		"test": "node_modules/.bin/jest"
 	},
 	"devDependencies": {
-		"jest": "^23.1.0"
+		"jest": "^23.1.0",
+		"rewire": "^4.0.1"
 	}
 }
