@@ -692,7 +692,7 @@ under the covers this is straight JavaScript code.
 While this is inconvenient for porting templates, it does make the templates more explicit, 
 faster and facilitates the use of any JavaScript expression.
 
-```html
+```
 {{title}}           <- Handlebars
 {{model.title}}     <- Moe.JS
 ```
@@ -708,7 +708,7 @@ Don't forget you can also use in-template `{{#code}}` blocks for one off helpers
 Moe.JS's partial directive expects a JavaScript expression which means the referenced template
 name must be quoted:
 
-```html
+```
 {{> partial}}       <- Handlebars
 {{> "partial"}}     <- Moe.JS
 ```
@@ -718,7 +718,7 @@ name must be quoted:
 Handlebars allows two kinds of comments `{{!-- --}}` and `{{! }}`.  Moe.JS only 
 supports the first format, since the second format might be a valid JavaScript expression (not operator).
 
-```html
+```
 {{!-- Comment  --}} <- Handlebars or Moe.JS
 {{! Comment }}      <- Handlebars only
 ```
@@ -735,7 +735,7 @@ can always get back to the root `model` object.
 
 Moe.JS doesn't support escaping braces with a backslash.  Replace with a JavaScript Expression:
 
-```html
+```
 \{{{model.title}}       <- Handlebars
 {{'{'}}{{model.title}}  <- Moe.JS
 { {{~model.title}}      <- Moe.JS or Handlebars
