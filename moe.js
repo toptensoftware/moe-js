@@ -17,8 +17,6 @@ function MoeHelpers(moe)
 	this.moe = moe;
 }
 
-MoeHelpers.prototype.require = require;
-
 // Helper to encode html entities
 MoeHelpers.prototype.encode = function(str) 
 {
@@ -355,7 +353,6 @@ MoeEngine.prototype.compile = function(template, options)
 	var finalCode;
 	finalCode = `var scope = null;\n`;
 	finalCode += `var $encode = helpers.encode;\n`;
-	finalCode += `var require = helpers.require;\n`;
 	finalCode += `var $buf = "";\n`;
 	finalCode += parts;
 	finalCode += "\n";
