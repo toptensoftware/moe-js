@@ -181,7 +181,7 @@ MoeEngine.prototype.compile = function(template)
 
 			case ">":
 				// Invoke partial
-				parts += `$buf += helpers.partial(model, context, scope, ${token.expression};\n`;
+				parts += `$buf += helpers.partial(model, context, scope, ${token.expression});\n`;
 				break;
 
 			case "{{}}":
