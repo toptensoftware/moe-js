@@ -7,7 +7,7 @@
 * Support for embedded code blocks
 * Support for external helper functions
 * Support for partials
-* Support for async templates
+* Support for async templates (use await inside template)
 * Built-in Express integration including support for outer "layouts"
 * Built-in template file cache
 * Simple to use
@@ -15,17 +15,20 @@
 
 ## Background
 
-Moe-js was born out of frustration with Handlebars - in particular with the
-awkward helper methods model and the lack of support for even simple expressions
-within the template. Moe-js provides a way to "power-up" an existing set of Handlebars templates 
-without having to rewrite them from scratch.
+Moe-js was born out of desire to get around some of the limitations of Handlebars, while still 
+providing a similar template syntax.  In particular, Moe-js is intended to address Handlebars'
+awkward helper methods and the lack of support for even simple expressions within the template. 
+Moe-js provides a way to "power-up" an existing set of Handlebars templates without having to 
+rewrite them from scratch.
 
 With Moe-js, you get a similar syntax but all the power of JavaScript within the template.  Unlike
-Handlebars which is language agnostic, Moe-js is unshamedly tied to JavaScript.
+Handlebars which is language agnostic, Moe-js is closely tied to the JavaScript language (which is 
+why it has "js" in it's name).
 
 Moe-js doesn't claim to be compatible with Handlebars but the syntax is very similar and existing
-templates can be converted fairly easily (certainly more easily than switching
-to a completely different view engine).
+templates can be converted fairly easily (certainly more easily than switching to a completely 
+different view engine).
+
 
 ## Using Moe-js with Express
 
@@ -87,7 +90,7 @@ Before executing a template, you must first compile it.
 const moe = require('moe-js');
 
 // Compile a template from a string
-var template = moe.compile("<h1>{{model.title}}</h1>");
+let template = moe.compile("<h1>{{model.title}}</h1>");
 ```
 
 Or compile from a file (the template will be cached so subsequent calls will re-use the same template)
@@ -101,42 +104,42 @@ moe.compileFile("myTemplate.moe", "UTF8", function(err, template) {
 Or, do it synchronously
 
 ```Javascript
-var template = moe.compileFileSync("mytemplate.moe", "UTF8");
+let template = moe.compileFileSync("mytemplate.moe", "UTF8");
 ```
 
 Or, using async/await:
 
 ```Javascript
-var template = await moe.compileFileAsync("mytemplate.moe", "UTF8");
+let template = await moe.compileFileAsync("mytemplate.moe", "UTF8");
 ```
 
 Once you have a template, you can execute it:
 
 ```Javascript
-var html = template({ name: "Hello, from Moe-js"});
+let html = template({ name: "Hello, from Moe-js"});
 assert(html == "<h1>Hello, from Moe-js</h1>")
 ```
 
 ## Async Templates
 
 By default, templates are compiled to be executed synchronously, but Moe-js can also build
-an async template functions that returns a promise.  This lets you use `await` statements within the
+an async template function that returns a Promise.  This lets you use `await` statements within the
 template itself.  To compile an async template, pass either `true` or `{ asyncTemplate: true }` as 
 the second parameter to any of the compile functions.
 
 ```Javascript
 // Compile an async template (Note use of "await model.promise")
-var template = moe.compile(`Promise result:  {{await model.promise}}`, {
+let template = moe.compile(`Promise result:  {{await model.promise}}`, {
     asyncTemplate: true     // Indicates we want an async template
 });
 
 // Create a simple promise that delivers a string
-var promise = new Promise((resolve, reject) => {
+let promise = new Promise((resolve, reject) => {
     setTimeout(() => resolve("Hello"), 1000);
 });
 
 // Execute the template (Note use of "await" on the template function)
-var result = await template({
+let result = await template({
     promise: promise,
 });
 
@@ -145,8 +148,8 @@ assert(result == "Promise result: Hello");
 
 Note: don't confuse async templates with the `moe.compileFileAsync` function:
 
-* `compileFileAsync` returns a promise for the compiled template function. 
-* Async templates allow the use of `await` within the template itself.
+* `moe.compileFileAsync` returns a promise for the compiled template function. 
+* `options.asyncTemplate` allow the use of `await` within the template itself.
 
 ## Template Language
 
@@ -155,7 +158,7 @@ following shows how to write Moe-js templates.
 
 ### Use `{{}}` to Embed Expressions
 
-Moe-js uses `{{` and `}}` to delimit expressions:
+Use `{{` and `}}` to delimit expressions:
 
 ```html
 <p>10 + 20 = {{ 10 + 20 }}</p>
@@ -175,7 +178,7 @@ Double braces cause the rendered text to be HTML encoded:
 <p>{{"<blah>"}}<p>
 ```
 
-Would result in:
+Results in:
 
 ```html
 <p>&lt;blah&gt;</p>
@@ -187,7 +190,7 @@ Use triple braces to suppress encoding:
 <p>{{{"<br/>"}}}</p>
 ```
 
-Would result in:
+Results in:
 
 ```html
 <p><br/></p>
@@ -202,7 +205,8 @@ You can embed comments as follows:
 ```
 
 Note: comment blocks can be used to surround other Moe-js directives - ie: they're
-an effective way to "comment out" entire sections of a template.
+an effective way to "comment out" entire sections of a template. (Although comments
+can't be nested)
 
 ### The Special `model` Variable 
 
@@ -220,7 +224,7 @@ Inside the template, the model properties would be accessed as follows:
     <h1>{{model.title}}</h1>
 ```
 
-(Unlike Handlebars, `{{title}}` won't work, you must specify `{{model.title}}`")
+(Unlike Handlebars, `{{title}}` won't work, you must specify `{{model.title}}`)
 
 ### Conditional Execution
 
@@ -404,19 +408,21 @@ function FormatPrice(val)
 
 Partials let you embed the contents of another template inside this template.
 
-Invoke the UserDetails template, passing the current model as the model for the template.
+For example, this will invoke the "UserDetails" template, passing the current model as the model for the template.
 
 ```html
 {{> "UserDetails" }}
 ```
 
-Note that unlike Handlebars, the name of the partial template must be quoted because it's a JavaScript expression.  This also means you can dynamically synthesize the name of the partial to invoke:
+Note that unlike Handlebars, the name of the partial template must be quoted because it's a JavaScript expression - which 
+also means can dynamically synthesize the name of the partial to invoke:
 
 ```html
 {{> "UserDetails_" + model.role }}
 ```
 
-When invoking a partial from within an `{{#each}}` block, the current loop item is passed as the model, so in this case the current user would be passed as the model to the partial template:
+When invoking a partial from within an `{{#each}}` block, the current loop item is passed as the partial's model. In this
+example, the current user would be passed as the model to the partial template:
 
 ```html
 {{#each u in model.Users}}
@@ -424,7 +430,7 @@ When invoking a partial from within an `{{#each}}` block, the current loop item 
 {{/each}}
 ```
 
-You can also, pass an explicit object as the model to the partial template:
+You can also, pass an explicit object to the partial template:
 
 ```html
 {{> "UserDetails", model.user}}
@@ -522,7 +528,7 @@ Produces:
 {TheTitle}
 ```
 
-But you could also just do this to strip the extra whitespace:
+alternatively your could include spaces to separate the braces and then use `~` to strip it out:
 
 ```html
 { {{~model.title~}} }
@@ -545,7 +551,7 @@ Although rarely necessary, you can create additional MoeEngine instances as foll
 
 ### moe.compile
 
-The `compile` function takes template string and compiles it to a function that can be invoked to
+The `compile` function takes a template string and compiles it to a function that can be invoked to
 render the template output:
 
 ``` Javascript
@@ -569,11 +575,14 @@ function template(model [, context])
 The `compileFile` function loads a template from text file, compiles it using the `moe.compile` function and
 stores the result in an internal cache.
 
+`compileFile` first tries to load from a file exactly as specified by `filename`.  If the file doesn't exist
+and the filename doesn't end with ".moe" then ".moe" is appended to the filename and tried again.
+
 ```Javascript
 function moe.compileFile(filename, options, callback)
 ```
 
-* `filename` - the file to compile.  If the file doesn't have an extension ".moe" will be automatically appended.
+* `filename` - the file to compile
 * `options` - compile options (see below)
 * `callback` - function that will be called when the template has been compiled
 
@@ -659,7 +668,7 @@ will set the `encoding` option.  eg:
 You can write helper functions to be used in your templates by either declaring them inside the template using `{{#code}}` blocks (as described above), or by attaching functions to the `moe.helpers` object:
 
 ```Javascript
-var moe = require('moe-js');
+const moe = require('moe-js');
 moe.helpers.FormatPrice = function (val)
 {
     if (val == 0)
@@ -677,6 +686,20 @@ You can then reference these helper function in your template as follows:
 
 Note that you should NOT replace the existing `.helpers` instance - it contains internal helper
 functions used by the generated template function.
+
+## Security Considerations
+
+Since Moe.JS allows the execution of arbitrary JavaScript code it should only be used in situations where
+the template scripts of a trusted origin.
+
+You should never allow an end user to upload a Moe.JS template and then execute it on your server.
+
+eg: Suppose you're developing mailing list software, you shouldn't use Moe.JS as the template format
+for email templates.
+
+While Moe.JS provides a reasonably sandboxed environment that doesn't allow access to the file system, 
+databases etc..., it's by no means secure and doesn't provide protection from attacks or accidental end
+user mistakes such as infinite loop, stack overflows, allocating excessive memeory etc...
 
 
 ## Converting Handlebar Templates to Moe-js
@@ -768,7 +791,7 @@ Each function can be supplied in a Sync and optionally an Async version.  The as
 if the template was compiled as an async template and if not present the sync version will be used as a fallback.
 
 ```Javascript
-var context = 
+let context = 
 {
     // Special member '$moe' provides hooks for partial processing
     $moe: 
@@ -802,9 +825,9 @@ var context =
     }  
 };
 
-var template = moe.compile(templateText);
-var model = { }
-var text = template(mode, context);     // NB: passing the context object
+let template = moe.compile(templateText);
+let model = { }
+let text = template(mode, context);     // NB: passing the context object
 
 ```
 

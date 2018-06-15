@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-var Tokenizer = require('./tokenizer').Tokenizer;
+const Tokenizer = require('./tokenizer').Tokenizer;
 
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -34,12 +34,12 @@ MoeHelpers.prototype.encode = function(str)
 	});
 }
 
-// Helper to iterate an iterable or call an alternate if iterable is empty
-MoeHelpers.prototype.each = function(outerScope, iter, cbItem, cbEmpty)
+function buildEachScope(outerScope, iter)
 {
-	var scope = {
+	let scope = {
 		outer: outerScope,
 		index: -1,
+		items: [],
 	};
 
 	if (iter)
@@ -56,30 +56,56 @@ MoeHelpers.prototype.each = function(outerScope, iter, cbItem, cbEmpty)
 		else if (isGeneratorFunction(iter))
 		{
 			scope.items = [];
-			for (var i of iter())
+			for (let i of iter())
 				scope.items.push(i);
 		}
 		else
 		{
 			scope.items = [iter];
 		}
-
-		// If any items process them
-		if (scope.items.length)
-		{
-			for (scope.index = 0; scope.index<scope.items.length; scope.index++)
-			{
-				scope.first = scope.index == 0;
-				scope.last = scope.index == scope.items.length-1;
-				scope.item = scope.items[scope.index];
-				cbItem(scope, scope.item);
-			}
-			return;
-		}
 	}
 
-	if (cbEmpty)
-		return cbEmpty(scope);
+	return scope;
+
+}
+// Helper to iterate an iterable or call an alternate if iterable is empty
+MoeHelpers.prototype.each = function(outerScope, iter, cbItem, cbEmpty)
+{
+	let scope = buildEachScope(outerScope, iter);
+	if (scope.items.length)
+	{
+		for (scope.index = 0; scope.index<scope.items.length; scope.index++)
+		{
+			scope.first = scope.index == 0;
+			scope.last = scope.index == scope.items.length-1;
+			scope.item = scope.items[scope.index];
+			cbItem(scope, scope.item);
+		}
+	}
+	else if (cbEmpty)
+	{
+		cbEmpty(scope);
+	}
+}
+
+// Helper to iterate an iterable or call an alternate if iterable is empty
+MoeHelpers.prototype.eachAsync = async function(outerScope, iter, cbItem, cbEmpty)
+{
+	let scope = buildEachScope(outerScope, iter);
+	if (scope.items.length)
+	{
+		for (scope.index = 0; scope.index<scope.items.length; scope.index++)
+		{
+			scope.first = scope.index == 0;
+			scope.last = scope.index == scope.items.length-1;
+			scope.item = scope.items[scope.index];
+			await cbItem(scope, scope.item);
+		}
+	}
+	else if (cbEmpty)
+	{
+		await cbEmpty(scope);
+	}
 }
 
 // Helper to iterate an iterable or call an alternate if iterable is empty
@@ -89,6 +115,15 @@ MoeHelpers.prototype.with = function(expr, cbItem, cbElse)
 		cbItem(expr);
 	else if (cbElse)
 		cbElse();
+}
+
+// Helper to iterate an iterable or call an alternate if iterable is empty
+MoeHelpers.prototype.withAsync = async function(expr, cbItem, cbElse)
+{
+	if (expr)
+		await cbItem(expr);
+	else if (cbElse)
+		await cbElse();
 }
 
 // Render a partial (Sync version)
@@ -118,7 +153,7 @@ MoeHelpers.prototype.partialSync = function(model, context, scope, name, subMode
 	}
 
 	// Load the template
-	var template = this.moe.compileFileSync(name);
+	let template = this.moe.compileFileSync(name);
 
 	// Invoke it
 	return template(subModel, context);
@@ -158,12 +193,12 @@ MoeHelpers.prototype.partialAsync = async function(model, context, scope, name, 
 		}
 		else if (context.$moe.resolvePartialPath)
 		{
-			name = context.$moe.resolvePartialPathname(name);
+			name = context.$moe.resolvePartialPath(name);
 		}
 	}
 
 	// Load the template
-	var template = await this.moe.compileFileAsync(name, { asyncTemplate: true });
+	let template = await this.moe.compileFileAsync(name, { asyncTemplate: true });
 
 	// Invoke it
 	return await template(subModel, context);
@@ -188,21 +223,21 @@ MoeEngine.prototype.express = function(app)
 // Compile a string template, returns a function(model, context)
 MoeEngine.prototype.compile = function(template, options)
 {
-	var parts = "";
-	var blockTypeStack = [ "none" ];
+	let parts = "";
+	let blockTypeStack = [ "none" ];
 
 	options = normalizeOptions(options);
 
-	for (var token of Tokenizer.tokenize(template))
+	for (let token of Tokenizer.tokenize(template))
 	{
 		// Get the current block type
-		var blockType = blockTypeStack[blockTypeStack.length-1];
+		let blockType = blockTypeStack[blockTypeStack.length-1];
 
 		// If it's a closing directive, check it matches
 		if (token.kind[0] == '/')
 		{
 			// Work out the expected closing tag type
-			var expectedCloseTag = blockType;
+			let expectedCloseTag = blockType;
 			if (expectedCloseTag == "ifelse")
 				expectedCloseTag = "if";
 			if (expectedCloseTag == "eachelse")
@@ -270,10 +305,11 @@ MoeEngine.prototype.compile = function(template, options)
 				break;
 
 			case "#each":
+			{
 				// Handle {{#each <controlVal> in <expr>}}
 				//   (vs) {{#each <expr>}}
-				var exprParts = token.expression.split(/[\s\t]+/);
-				var itemName = "item";
+				let exprParts = token.expression.split(/[\s\t]+/);
+				let itemName = "item";
 				if (exprParts.length > 2 && exprParts[1] == 'in')
 				{
 					token.expression  = exprParts.slice(2).join(' ');
@@ -281,8 +317,16 @@ MoeEngine.prototype.compile = function(template, options)
 				}
 
 				blockTypeStack.push("each");
-				parts += `helpers.each(scope, ${token.expression}, function(scope, ${itemName}) {\n`;
+				if (options.asyncTemplate)
+				{
+					parts += `await helpers.eachAsync(scope, ${token.expression}, async function(scope, ${itemName}) {\n`;
+				}
+				else
+				{
+					parts += `helpers.each(scope, ${token.expression}, function(scope, ${itemName}) {\n`;
+				}
 				break;
+			}
 
 			case "/each":
 				parts += `});\n`;
@@ -290,10 +334,11 @@ MoeEngine.prototype.compile = function(template, options)
 				break;
 
 			case "#with":
+			{
 				// Handle {{#with <controlVal> as <expr>}}
 				//   (vs) {{#with <expr>}}
-				var exprParts = token.expression.split(/[\s\t]+/);
-				var itemName = "item";
+				let exprParts = token.expression.split(/[\s\t]+/);
+				let itemName = "item";
 				if (exprParts.length > 2 && exprParts[1] == 'as')
 				{
 					token.expression  = exprParts.slice(2).join(' ');
@@ -301,9 +346,17 @@ MoeEngine.prototype.compile = function(template, options)
 				}
 
 				blockTypeStack.push("with");
-				parts += `helpers.with(${token.expression}, function(${itemName}) { `;
+				if (options.asyncTemplate)
+				{
+					parts += `await helpers.withAsync(${token.expression}, async function(${itemName}) { `;
+				}
+				else
+				{
+					parts += `helpers.with(${token.expression}, function(${itemName}) { `;
+				}
 				break;
-				
+			}
+			
 			case "/with":
 				parts += "});";
 				blockTypeStack.pop();
@@ -318,12 +371,18 @@ MoeEngine.prototype.compile = function(template, options)
 				else if (blockType == "each")
 				{
 					blockTypeStack[blockTypeStack.length -1 ] = "eachelse";
-					parts += "}, function(item) {\n";
+					if (options.asyncTemplate)
+						parts += "}, async function(item) {\n";
+					else
+						parts += "}, function(item) {\n";
 				}
 				else if (blockType == "with")
 				{
 					blockTypeStack[blockTypeStack.length -1 ] = "withelse";
-					parts += `}, function(scope) {\n`;
+					if (options.asyncTemplate)
+						parts += `}, async function(scope) {\n`;
+					else
+						parts += `}, function(scope) {\n`;
 				}
 				else
 					throw new Error(`Unexpected else directive`);
@@ -350,18 +409,18 @@ MoeEngine.prototype.compile = function(template, options)
 		throw new Error(`Missing closing tag: {{/${blockTypeStack[blockTypeStack.length-1]}))`);
 
 	// Compile it
-	var finalCode;
-	finalCode = `var scope = null;\n`;
-	finalCode += `var $encode = helpers.encode;\n`;
-	finalCode += `var $buf = "";\n`;
+	let finalCode;
+	finalCode = `let scope = null;\n`;
+	finalCode += `let $encode = helpers.encode;\n`;
+	finalCode += `let $buf = "";\n`;
 	finalCode += parts;
 	finalCode += "\n";
 	finalCode += `return $buf;`;
 
 //console.log(finalCode);
 
-	var fn;
-	var compiledFn;
+	let fn;
+	let compiledFn;
 
 	if (!options.asyncTemplate)
 	{
@@ -387,7 +446,7 @@ MoeEngine.prototype.compile = function(template, options)
 
 	// Store the implementation function (handy to for debug to see the actual implementation)
 	// eg:
-	//   var template = moe.compileFileSync("template.moe");
+	//   let template = moe.compileFileSync("template.moe");
 	//   console.log(template.impl.toString());
 	fn.impl = compiledFn;
 	fn.isAsync = options.asyncTemplate;
@@ -434,45 +493,69 @@ function normalizeOptions(options)
 // Compile a file (async)
 MoeEngine.prototype.compileFile = function(filename, options, cb)
 {
-	// Qualify with extension
-	if (path.extname(filename).length == 0)
-	{
-		filename += ".moe";
-	}
-
 	// Normalize options
 	options = normalizeOptions(options);
 
-	// Check cache
-	var cache = options.asyncTemplates ? this.asyncTemplates : this.syncTemplates;
-	var template = cache[filename];
+	// If not found with default name, try again with .moe
+	let hasExtension = filename.toLowerCase().endsWith('.moe');
+	if (hasExtension)
+	{
+		filename = filename.substr(0, filename.length - 4);
+		hasExtension = false;
+	}
 
+	// Check cache
+	let cache = options.asyncTemplate ? this.asyncTemplates : this.syncTemplates;
+	let template = cache[filename];
+
+	// Found in cache?
 	if (template)
 	{
 		setImmediate(function() {
 			cb(null, template);
 		});
+		return;
 	}
-	else
+
+	const compileAndCache = (text) =>
 	{
-		fs.readFile(filename, options.encoding, function(err, text) {
-
-			if (err)
-				return cb(err);
-
-			try
-			{
-				var compiled = this.compile(text);
-				cache[filename] = compiled;
-				cb(null, compiled);
-			}
-			catch (err)
-			{
-				cb(err);
-			}
-
-		}.bind(this));
+		try
+		{
+			let compiled = this.compile(text, options);
+			cache[filename] = compiled;
+			cb(null, compiled);
+		}
+		catch (err)
+		{
+			cb(err);
+		}
 	}
+
+	// Read the file
+	fs.readFile(filename, options.encoding, (err, text) => {
+
+		// Loaded? compile it
+		if (!err)
+		{
+			return compileAndCache(text);
+		}
+
+		// If filename has extension or some other error beside not found, then fail now
+		if (err.code != "ENOENT" || hasExtension)
+		{
+			return cb(err);
+		}
+
+		// Try with .moe added
+		filename += '.moe';
+		fs.readFile(filename, options.encoding, (err, text) => {
+			if (err)
+				cb(err);
+			else
+				compileAndCache(text);
+		});
+
+	});
 }
 
 // Compile a file (async)
@@ -500,16 +583,16 @@ MoeEngine.prototype.compileFileSync = function(filename, options)
 	// Normalize options
 	options = normalizeOptions(options);
 
-	var cache = options.asyncTemplates ? this.asyncTemplates : this.syncTemplates;
-	var template = cache[filename];
+	let cache = options.asyncTemplate ? this.asyncTemplates : this.syncTemplates;
+	let template = cache[filename];
 
 	// Already compiled?
 	if (template)
 		return template;
 
 	// Compile it
-	var text = fs.readFileSync(filename, options.encoding);
-	var compiled = this.compile(text, options);
+	let text = fs.readFileSync(filename, options.encoding);
+	let compiled = this.compile(text, options);
 	cache[filename] = compiled;
 	return compiled;
 }
@@ -533,7 +616,7 @@ MoeExpressHooks.prototype.decoratePartialModel = function(model)
 		return model;
 
 	// Copy settings
-	var temp = {
+	let temp = {
 		settings: this.options.settings,
 		cache: this.options.cache,
 	};
@@ -572,18 +655,18 @@ MoeExpressHooks.prototype.resolveViewPath = function(name, viewFolders)
 	// Check the cache first
 	if (this.options.cache)
 	{
-		for (var i=0; i<viewFolders.length; i++)
+		for (let i=0; i<viewFolders.length; i++)
 		{
-			var file = path.resolve(viewFolders[i], name);
+			let file = path.resolve(viewFolders[i], name);
 			if (this.moe.templates[file])
 				return file;
 		}
 	}
 
 	// Try to find file
-	for (var i=0; i<viewFolders.length; i++)
+	for (let i=0; i<viewFolders.length; i++)
 	{
-		var file = path.resolve(viewFolders[i], name);
+		let file = path.resolve(viewFolders[i], name);
 		try
 		{
 			if (fs.existsSync(file))
@@ -603,7 +686,7 @@ MoeExpressHooks.prototype.resolveViewPath = function(name, viewFolders)
 MoeExpressHooks.prototype.resolvePartialPath = function(name)
 {
 	// Get view folder search path
-	var viewFolders = this.options.settings.partialViews ? this.options.settings.partialViews : this.options.settings.views;
+	let viewFolders = this.options.settings.partialViews ? this.options.settings.partialViews : this.options.settings.views;
 	return this.resolveViewPath(name, viewFolders);	
 }
 
@@ -623,18 +706,18 @@ function ExpressMiddleware(moe, app)
 
 			// Setup hooks to resolve partial paths and decorate
 			// sub-models before passing to partials
-			var context = {
+			let context = {
 				$moe: new MoeExpressHooks(moe, app, options),
 			};
 
 			// Compile and run!
-			var template = await moe.compileFileAsync(filename, { asyncTemplate: true });
+			let template = await moe.compileFileAsync(filename, { asyncTemplate: true });
 
 			// Process the body
-			var body = await template(options, context);
+			let body = await template(options, context);
 
 			// Work out the layout file
-			var layout = options.layout;
+			let layout = options.layout;
 			if (layout === undefined && options.settings && options.settings['view options'])
 				layout = options.settings['view options'].layout;
 			if (layout === undefined)
@@ -645,8 +728,8 @@ function ExpressMiddleware(moe, app)
 				return body;
 
 			// Find the layout file
-			var layoutFile = context.$moe.resolveViewPath(layout, options.settings.views);
-			var templateLayout = await moe.compileFileAsync (layoutFile, { asyncTemplate: true });
+			let layoutFile = context.$moe.resolveViewPath(layout, options.settings.views);
+			let templateLayout = await moe.compileFileAsync (layoutFile, { asyncTemplate: true });
 
 			// Pass on the inner body
 			options.body = body;
@@ -666,7 +749,7 @@ function merge(a, b)
 {
 	if (a && b) 
 	{
-		for (var key in b) 
+		for (let key in b) 
 		{
 			a[key] = b[key];
 		}

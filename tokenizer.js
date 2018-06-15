@@ -29,7 +29,7 @@ class Tokenizer
 
     static skipLineTail(s, pIn)
     {
-        var p = Tokenizer.skipLineSpace(s, pIn);
+        let p = Tokenizer.skipLineSpace(s, pIn);
         if (!s[p] || s[p] == '\r' || s[p] == '\n')
         {
             if (s[p] == '\r')
@@ -55,7 +55,7 @@ class Tokenizer
 
     static readIdentifier(s, p)
     {
-        var pStart = p;
+        let pStart = p;
         while (Tokenizer.isIdentifierChar(s[p]))
             p++;
         return s.substr(pStart, p-pStart);
@@ -63,7 +63,7 @@ class Tokenizer
 
     static skipString(s, p)
     {
-        var chKind = s[p];
+        let chKind = s[p];
         p++;
 
         while (s[p] != chKind)
@@ -174,7 +174,7 @@ class Tokenizer
     static consumeLineSpace(s, pStartIn, pEndIn)
     {
         // Skip preceding line space
-        var pStart = pStartIn;
+        let pStart = pStartIn;
         while (pStart > 0 && Tokenizer.isLineSpace(s[pStart-1]))
             pStart--;
 
@@ -184,7 +184,7 @@ class Tokenizer
             // Yes
             
             // Skip trailing line space
-            var pEnd = Tokenizer.skipLineSpace(s, pEndIn);
+            let pEnd = Tokenizer.skipLineSpace(s, pEndIn);
 
             // End if line found?
             if (!s[pEnd] || s[pEnd] == '\r' || s[pEnd] == '\n')
@@ -208,16 +208,16 @@ class Tokenizer
     static *tokenize(strIn)
     {
         // We can save a lot of boundary checks by null terminating
-        var s = strIn;
-        var p = 0;
+        let s = strIn;
+        let p = 0;
 
         while (s[p])
         {
-            var rem = s.substr(p);
+            let rem = s.substr(p);
 
             // Find the next open brace
-            var tokenPos = s.indexOf("{{", p);
-            var originalTokenPos = tokenPos;
+            let tokenPos = s.indexOf("{{", p);
+            let originalTokenPos = tokenPos;
 
             // No more, return the trail text
             if (tokenPos < 0)
@@ -237,7 +237,7 @@ class Tokenizer
             if (s.substr(tokenPos+2, 3) == "!--")
             {
                 // Find the end delimiter
-                var endPos = s.indexOf("--}}", tokenPos);
+                let endPos = s.indexOf("--}}", tokenPos);
                 if (endPos < 0)
                     throw new TokenError("Unclosed comment", tokenPos);
 
@@ -263,14 +263,14 @@ class Tokenizer
             }
 
             // What kind of token are we dealing with
-            var mode = 2;					// number of braces, or zero for comment
-            var close;						// end of token
+            let mode = 2;					// number of braces, or zero for comment
+            let close;						// end of token
             if (s[tokenPos+2] == '{')
             {
                 if (s[tokenPos+3] == '{')
                 {
                     // Raw text {{{{ }}}}
-                    var endPos = s.indexOf("}}}}", tokenPos);
+                    let endPos = s.indexOf("}}}}", tokenPos);
                     if (endPos < 0)
                         throw new TokenError("Unclosed raw block", tokenPos);
 
@@ -314,11 +314,11 @@ class Tokenizer
                 mode = 2;
             }
 
-            var directiveKind = "";			// "#" or "/"
-            var directive = "";
-            var trimBefore = false;
-            var trimAfter = false;
-            var innerPos = tokenPos + mode;
+            let directiveKind = "";			// "#" or "/"
+            let directive = "";
+            let trimBefore = false;
+            let trimAfter = false;
+            let innerPos = tokenPos + mode;
 
             // Handle {~...} for trim before
             if (s[innerPos] == '~')
@@ -356,7 +356,7 @@ class Tokenizer
                 else
                 {
                     // Handle {{else}} and {{elseif}} (without #'s)
-                    var id = Tokenizer.readIdentifier(s, innerPos); 
+                    let id = Tokenizer.readIdentifier(s, innerPos); 
                     if (id == "else" || id == "elseif")
                     {
                         directiveKind = "#";
@@ -367,14 +367,14 @@ class Tokenizer
             }
 
             // Skip expression
-            var innerEndPos = Tokenizer.skipJavaScript(s, innerPos);
+            let innerEndPos = Tokenizer.skipJavaScript(s, innerPos);
 
             // Check the end dilimiter matches
             if (s.substr(innerEndPos, mode) != close)
                 throw new TokenError(`Misformed directive, expected ${close}`, endPos)
 
             // Calculate outer end pos
-            var endPos = innerEndPos + mode;
+            let endPos = innerEndPos + mode;
 
             // Strip of trailing ~
             if (s[innerEndPos-1] == '~')
@@ -415,7 +415,7 @@ class Tokenizer
                 if (directive == "code")
                 {
                     // Find the closing token
-                    var closeToken = s.indexOf("{{/code}}", endPos);;
+                    let closeToken = s.indexOf("{{/code}}", endPos);;
                     if (closeToken < 0)
                         throw new TokenError("Unclosed #code block", tokenPos);
 
@@ -427,7 +427,7 @@ class Tokenizer
                     }
 
                     // Skip the close token
-                    var endPos = Tokenizer.skipLineTail(s, closeToken + 9);
+                    let endPos = Tokenizer.skipLineTail(s, closeToken + 9);
                 }
                 else
                 {
@@ -447,7 +447,7 @@ class Tokenizer
             }
             else if (mode == 2)
             {
-                var expression = s.substr(innerPos, innerEndPos - innerPos).trim();
+                let expression = s.substr(innerPos, innerEndPos - innerPos).trim();
                 if (expression[0] == '>')
                 {
                     yield {
