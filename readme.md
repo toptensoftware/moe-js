@@ -1,6 +1,6 @@
 ## Welcome to Moe-js
 
-"Moe-js" is a simple, fast, flexible, modern Handlebars inspired templating engine for JavaScript.
+"Moe-js" is a simple, fast, flexible, modern, async enabled, Handlebars inspired templating engine for JavaScript.
 
 * Mustache/Handlebars inspired format
 * Support for in-template JavaScript expressions
