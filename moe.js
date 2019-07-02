@@ -680,7 +680,7 @@ MoeExpressHooks.prototype.resolveViewPath = function(name, viewFolders)
 		}
 	}
 
-	throw new Error(`Can't find partial "${name}" on path ${viewFolders.join(", ")}`);
+	throw new Error(`Can't find template "${name}" on path ${viewFolders.join(", ")}`);
 }
 
 MoeExpressHooks.prototype.resolvePartialPath = function(name)
