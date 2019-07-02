@@ -371,7 +371,7 @@ class Tokenizer
 
             // Check the end dilimiter matches
             if (s.substr(innerEndPos, mode) != close)
-                throw new TokenError(`Misformed directive, expected ${close}`, endPos)
+                throw new TokenError(`Misformed directive, expected ${close}`, innerEndPos)
 
             // Calculate outer end pos
             let endPos = innerEndPos + mode;
@@ -415,7 +415,7 @@ class Tokenizer
                 if (directive == "code")
                 {
                     // Find the closing token
-                    let closeToken = s.indexOf("{{/code}}", endPos);;
+                    let closeToken = s.indexOf("{{/code}}", endPos);
                     if (closeToken < 0)
                         throw new TokenError("Unclosed #code block", tokenPos);
 
@@ -427,7 +427,7 @@ class Tokenizer
                     }
 
                     // Skip the close token
-                    let endPos = Tokenizer.skipLineTail(s, closeToken + 9);
+                    endPos = Tokenizer.skipLineTail(s, closeToken + 9);
                 }
                 else
                 {
