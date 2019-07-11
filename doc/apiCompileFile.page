@@ -1,0 +1,25 @@
+---
+title: moe.compileFile
+---
+# moe.compileFile
+
+The `compileFile` function loads a template from text file, compiles it using the `moe.compile` function and
+stores the result in an internal cache.
+
+`compileFile` first tries to load from a file exactly as specified by `filename`.  If the file doesn't exist
+and the filename doesn't end with ".moe" then ".moe" is appended to the filename and tried again.
+
+```javascript
+function moe.compileFile(filename, options, callback)
+```
+
+* `filename` - the file to compile
+* `options` - compile options (see below)
+* `callback` - function that will be called when the template has been compiled
+
+The callback function is a typical Node style callback:
+
+```javascript
+function callback(err, template)
+```
+

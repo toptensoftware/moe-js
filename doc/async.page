@@ -1,0 +1,34 @@
+---
+title: Async Execution
+---
+# Async Execution
+
+By default, templates are compiled to be executed synchronously, but Moe-js can also build
+an async template function that returns a Promise.  This lets you use `await` statements within the
+template itself.  To compile an async template, pass either `true` or `{ asyncTemplate: true }` as 
+the second parameter to any of the compile functions.
+
+```javascript
+// Compile an async template (Note use of "await model.promise")
+let template = moe.compile(`Promise result:  {{await model.promise}}`, {
+    asyncTemplate: true     // Indicates we want an async template
+});
+
+// Create a simple promise that delivers a string
+let promise = new Promise((resolve, reject) => {
+    setTimeout(() => resolve("Hello"), 1000);
+});
+
+// Execute the template (Note use of "await" on the template function)
+let result = await template({
+    promise: promise,
+});
+
+assert(result == "Promise result: Hello");
+```
+
+Note: don't confuse async templates with the `moe.compileFileAsync` function:
+
+* `moe.compileFileAsync` returns a promise for the compiled template function. 
+* `options.asyncTemplate` allow the use of `await` within the template itself.
+

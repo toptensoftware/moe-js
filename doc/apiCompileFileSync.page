@@ -1,0 +1,16 @@
+---
+title: moe.compileFileSync
+---
+# moe.compileFileSync
+
+Synchronous version of the `moe.compileFile` function:
+
+```javascript
+function moe.compileFileSync(filename, options)
+```
+
+* `filename` is the file to compile
+* `options` - optional compile options (see below)
+* returns the compiled template, or throws an exception
+
+

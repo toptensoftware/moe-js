@@ -1,0 +1,60 @@
+---
+title: Conditional Execution
+---
+# Conditional Execution
+
+
+The `{{#if}}` / `{{#else}}` / `{{/if}}` directives are used to conditionally include sections:
+
+```html
+{{#if model.quantity == 0}}
+<p>OUT OF STOCK</p>
+{{/if}}
+```
+
+Else blocks can be marked as `{{#else}}` or `{{else}}` (for Handlebars compatibility)
+
+```html
+{{#if model.quantity == 0}}
+<p>OUT OF STOCK</p>
+{{#else}}
+<P>IN STOCK</P>
+{{/if}}
+```
+
+There's also an `{{#elseif}}` directive:
+
+```html
+{{#if model.quantity == 0}}
+<p>OUT OF STOCK</p>
+{{#elseif model.quantity < 3}}
+<p>ALMOST OUT OF STOCK</p>
+{{#else}}
+<P>IN STOCK</P>
+{{/if}}
+```
+
+As an alternative for `{{#else}}` and `{{#elseif}}` you can use `{{^}}` and `{{^if}}`:
+
+```html
+{{#if model.quantity == 0}}
+<p>OUT OF STOCK</p>
+{{^if model.quantity < 3}}
+<p>ALMOST OUT OF STOCK</p>
+{{^}}
+<P>IN STOCK</P>
+{{/if}}
+```
+
+Moe-js doesn't really need an `{{#unless}}` block (because it's easy to just use `{{#if !(expr)}}`) but
+includes one anyway:
+
+```html
+{{#unless model.newUser}}
+<p>User ID: {{model.user.id}}</p>
+{{/unless}}
+```
+
+An `{{#unless}}` block can't have an `{{#else}}` block.
+
+

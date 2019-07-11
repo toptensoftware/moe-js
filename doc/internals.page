@@ -1,0 +1,68 @@
+---
+title: Internals
+---
+# Internals
+
+This section describes some of the internal operation of moe-js
+
+## The Context Object
+
+In addition to the `.model` object that is used to pass data to a template, there is a second special object called the `.context`.  Unlike the model object which can change between templates and partials, the context object remains the same
+across all templates used.
+
+The context object is optional and if used should be passed as the second parameter to the compiled template function (see example below)
+
+## Partial Template Resolution and Model Decoration Hooks
+
+By default when a partial template is referenced, the file is loaded directly from the current directory.  Since most
+integrations will want to look for partials in a particular location, the context object can contain a special `$moe` 
+member variable that can provide functions used to resolve the partial location and to decorate the partials model object
+before the partial is rendered.
+
+These hooks are used by Moe-js's Express integration to look for partials in the views subfolder and to 
+merge models with local settings.
+
+Each function can be supplied in a Sync and optionally an Async version.  The async versions will only be called
+if the template was compiled as an async template and if not present the sync version will be used as a fallback.
+
+```javascript
+let context = 
+{
+    // Special member '$moe' provides hooks for partial processing
+    $moe: 
+    {
+        // Map a partial name to an actual file path    
+        resolvePartialPath: function(partialTemplateName) {
+            // Return the full path to the template file to use
+            return path.join("./views/partialViews", partialTemplateName);
+        },
+
+        resolvePartialPathAsync: async function(partialTemplteName) {
+            // Async version of above.  Only called on async templates
+            // and will fall back to sync version if not present
+        },
+
+        // Provides an opportunity to "decorate" the a model object before it's
+        // passed to a partial.
+        decoratePartialModel: function(model) {
+            // Return either the original object modified, or a new object
+            // merged with the original model.
+            return merge({
+                "someCustomSettingsForThePartial": "Whatever",
+                "somethingElse": 99
+            }, model);
+        },
+
+        decoratePartialModelAsync: async function(model) {
+            // Async version of above.  Only called on async templates
+            // and will fall back to sync version if not present
+        },
+    }  
+};
+
+let template = moe.compile(templateText);
+let model = { }
+let text = template(mode, context);     // NB: passing the context object
+
+```
+

@@ -1,0 +1,36 @@
+---
+title: Escaping Braces
+---
+# Escaping Braces
+
+Moe-js doesn't provide any support for escaping braces outside of directives.  Instead, just use a simple
+expression:
+
+```html
+{{"{{"}} This is double braced }}
+```
+
+Produces:
+
+```html
+{{ This is double braced }}
+```
+
+Single braces don't usually need to be escaped, unless they're immediately before a Moe-js directive:
+
+```html
+{{"{"}}{{model.title}}{{"}"}}
+```
+
+Produces:
+
+```html
+{TheTitle}
+```
+
+alternatively your could include spaces to separate the braces and then use `~` to strip it out:
+
+```html
+{ {{~model.title~}} }
+```
+

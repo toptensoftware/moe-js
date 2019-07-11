@@ -1,0 +1,38 @@
+---
+title: With blocks
+---
+# With Blocks
+`{{#with}}` blocks can be used to evaluate an expression and then generate a template block
+using the result of the expression.
+
+If not specified, the expression gets assigned to a variable named `item`:
+
+```html
+{{#with model.user.post[33].comments[1]}}
+<p>{{item.text}}</p>
+<p>Posted at: {{item.time}}</p>
+{{/with}}
+```
+
+To specify the name of the variable inside use `as`, like so:
+
+```html
+{{#with comment as model.user.post[33].comments[1]}}
+<p>{{comment.text}}</p>
+<p>Posted at: {{comment.time}}</p>
+{{/with}}
+```
+
+The contents of a `{{#with}}` block only render if the expression evaluates to a "truthy" value, and
+they can have an optional `{{#else}}` block:
+
+```html
+{{#with comment as model.user.post[33].comments[1]}}
+<p>{{comment.text}}</p>
+<p>Posted at: {{comment.time}}</p>
+{{#else}}
+<p>No Comment</p>
+{{/with}}
+```
+
+

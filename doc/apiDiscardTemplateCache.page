@@ -1,0 +1,11 @@
+---
+title: moe.discardTemplateCache
+---
+# moe.discardTemplateCache
+
+Discards the contents of the internal template cache.  Call this function if any of the template
+files have changed to force those templates to be re-read and re-compiled next time they're referenced.
+
+```javascript
+function moe.discardTemplateCache()
+```

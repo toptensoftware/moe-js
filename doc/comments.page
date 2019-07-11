@@ -1,0 +1,15 @@
+---
+title: Comments
+---
+# Comments
+
+You can embed comments as follows:
+
+```html
+{{!-- This is a comment --}}
+```
+
+Note: comment blocks can be used to surround other Moe-js directives - ie: they're
+an effective way to "comment out" entire sections of a template. (Although comments
+can't be nested)
+

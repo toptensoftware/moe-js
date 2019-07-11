@@ -1,0 +1,42 @@
+---
+title: Basic Usage
+---
+# Basic Usage
+
+Before executing a template, you must first compile it.  
+
+```javascript
+// Import moe
+const moe = require('moe-js');
+
+// Compile a template from a string
+let template = moe.compile("<h1>{{model.title}}</h1>");
+```
+
+Or compile from a file (the template will be cached so subsequent calls will re-use the same template)
+
+```javascript
+moe.compileFile("myTemplate.moe", "UTF8", function(err, template) {
+
+});
+```
+
+Or, do it synchronously
+
+```javascript
+let template = moe.compileFileSync("mytemplate.moe", "UTF8");
+```
+
+Or, using async/await:
+
+```javascript
+let template = await moe.compileFileAsync("mytemplate.moe", "UTF8");
+```
+
+Once you have a template, you can execute it:
+
+```javascript
+let html = template({ name: "Hello, from Moe-js"});
+assert(html == "<h1>Hello, from Moe-js</h1>")
+```
+

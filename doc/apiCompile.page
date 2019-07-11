@@ -1,0 +1,39 @@
+---
+title: moe.compile
+---
+# moe.compile
+
+The `compile` function takes a template string and compiles it to a function that can be invoked to
+render the template output:
+
+``` Javascript
+function moe.compile(templateScript. [options])
+```
+
+* `templateScript` -  a string containing the template to be compiled
+* `options` - optional compile options (see below)
+
+The returned function is of the following form:
+
+```javascript
+function template(model [, context])
+```
+
+* `model` - the data to be passed to the model
+* `context` - an optional object that will be passed to the template and to any partials
+
+
+
+When you import moe-js, the returned object is the default instance of the MoeEngine class.  
+
+```javascript
+const moe = require('moe-js');
+```
+
+Although rarely necessary, you can create additional MoeEngine instances as follows:
+
+```javascript
+const moe = require('moe-js');
+const moe2 = new moe.MoeEngine();
+```
+

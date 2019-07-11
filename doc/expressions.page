@@ -1,0 +1,48 @@
+---
+title: Expressions
+---
+# Expressions
+
+Moe-js templates are similar to Handlebars templates, but there are some important 
+differences.  This section shows how to write Moe-js templates.
+
+## Use `{{}}` to Embed Expressions
+
+Use `{{` and `}}` to delimit expressions:
+
+```html
+<p>10 + 20 = {{ 10 + 20 }}</p>
+```
+
+Any valid JavaScript expression can be used:
+
+```html
+<p>sin(0.5) = {{ Math.sin(0.5) }}</p>
+```
+
+## Escaped vs Non-Escaped Output
+
+Double braces cause the rendered text to be HTML encoded:
+
+```html
+<p>{{"<blah>"}}<p>
+```
+
+Results in:
+
+```html
+<p>&lt;blah&gt;</p>
+```
+
+Use triple braces to suppress encoding:
+
+```html
+<p>{{{"<br/>"}}}</p>
+```
+
+Results in:
+
+```html
+<p><br/></p>
+```
+

@@ -1,0 +1,48 @@
+---
+title: Whitespace Control
+---
+# Whitespace Control
+
+You can strip out whitespace between Moe-js directives and other parts of the template by placing a `~`
+character inside the start or end of any `{{ }}` or `{{{ }}}` directive.
+
+A `~` at the start of a directive means to strip out any whitespace before the directive (including spaces,
+tabs, line feeds and carriage returns).  A `~` at the end of a directive causes whitespace after the directive
+to be stripped.
+
+```html
+{{#if model.inStock~}}
+IN STOCK
+{{~^~}}
+OUT OF STOCK
+{{~/if}}
+```
+
+is equivalent to:
+
+```html
+{{#if model.inStock}}IN STOCK{{^}}OUT OF STOCK{{/if}}
+```
+
+Note too that Moe-js will automatically remove line space around control directives that are 
+on a line by themselves:
+
+```html
+<div>
+    {{#if model.inStock}}
+    IN STOCK
+    {{^}}
+    OUT OF STOCK
+    {{/if}}
+<div>
+```
+
+Produces:
+
+```
+<div>
+    IN STOCK
+<div>
+```
+
+

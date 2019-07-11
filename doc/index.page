@@ -1,3 +1,9 @@
+---
+---
+<div class="banner" markdown=1>
+![Banner](banner.png)
+</div>
+
 # Welcome to Moe-js
 
 "Moe-js" is a simple, fast, flexible, modern, async enabled, Handlebars inspired templating engine for JavaScript.
@@ -29,7 +35,14 @@ Moe-js doesn't claim to be compatible with Handlebars but the syntax is very sim
 templates can be converted fairly easily (certainly more easily than switching to a completely 
 different view engine).
 
-
 ## Documentation
 
-Full documentation for moe-js is [available here](https://www.toptensoftware.com/moe-js).
+<div class="primary-nav-shown">
+For documentation refer to the topics in the navigation panel to the left.
+</div>
+
+<div class="primary-nav-hidden">
+For documentation refer to the topics in the popup navigation menu accessible via the 
+menu button at the top left.
+</div>
+

@@ -1,0 +1,34 @@
+---
+title: Partials
+---
+# Partials
+
+Partials let you embed the contents of another template inside this template.
+
+For example, this will invoke the "UserDetails" template, passing the current model as the model for the template.
+
+```html
+{{> "UserDetails" }}
+```
+
+Note that unlike Handlebars, the name of the partial template must be quoted because it's a JavaScript expression - which 
+also means you can dynamically synthesize the name of the partial to invoke:
+
+```html
+{{> "UserDetails_" + model.role }}
+```
+
+When invoking a partial from within an `{{#each}}` block, the current loop item is passed as the partial's model. In this
+example, the current user would be passed as the model to the partial template:
+
+```html
+{{#each u in model.Users}}
+{{> "UserDetails" }}
+{{/each}}
+```
+
+You can also, pass an explicit object to the partial template:
+
+```html
+{{> "UserDetails", model.user}}
+```

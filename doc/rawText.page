@@ -1,0 +1,23 @@
+---
+title: Raw Text
+---
+# Raw Text
+
+Raw text can be embedded in a template using `{{{{ }}}}`:
+
+```html
+<pre>
+{{{{<h1>{{model.title}}</h1>    
+<p>This is an example Moe-js template</p>}}}}
+</pre>
+```
+
+Note how the `{{model.title}}` directive was ignored and passed through:
+
+```html
+<pre>
+<h1>{{model.title}}</h1>
+<p>This is an example Moe-js template</p>
+</pre>
+```
+

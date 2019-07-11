@@ -1,0 +1,44 @@
+---
+projectTitle: Moe-js
+projectSubTitle: "v0.0.1"
+projectUrlPrefix: /moe-js/
+prismLanguages:
+  - javascript
+  - markup
+navTree:
+  - text: Moe-js
+    subItems:
+      - text: Overview|.
+      - text: Basic Usage|basics
+      - text: Async Execution|async
+      - text: Helper Functions|helpers
+      - text: Compile Options|compileOptions
+      - text: Express Integration|express
+  - text: Template Language
+    subItems:
+      - text: Expressions|expressions
+      - text: Comments|comments
+      - text: The model Variable|model
+      - text: Conditional Execution|Conditional
+      - text: Rendering Collections|collections
+      - text: With Blocks|withBlocks
+      - text: Code Blocks|codeBlocks
+      - text: Partials|Partials
+      - text: Raw Text|rawText
+      - text: Whitespace Control|whitespace
+      - text: Escaping Braces|braces
+  - text: API Reference
+    subItems:
+      - text: Basics|apiBasics
+      - text: moe.compile|apiCompile
+      - text: moe.compileFile|apiCompileFile
+      - text: moe.compileFileSync|apiCompileFileSync
+      - text: moe.compileFileAsync|apiCompileFileAsync
+      - text: moe.discardTemplateCache|apiDiscardTemplateCache
+      - text: moe.helpers|apiHelpers
+  - text: Miscellaneous
+    subItems:
+      - text: Security Considerations|security
+      - text: Converting Handlebars|converting
+      - text: Internals|internals
+---

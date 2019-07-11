@@ -1,0 +1,16 @@
+---
+title: moe.compileFileAsync
+---
+# moe.compileFileAsync
+
+Promise version of the `moe.compileFile` function:
+
+```javascript
+async function moe.compileFileAsync(filename, options)
+```
+
+* `filename` is the file to compile
+* `options` - optional compile options (see below)
+* returns a Promise for the compiled template, or throws an exception
+
+

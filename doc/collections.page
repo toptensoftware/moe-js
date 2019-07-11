@@ -1,0 +1,69 @@
+---
+title: Rendering Collections
+---
+# Rendering Collections
+To loop over a collection of items, use the `{{#each}}` directive and the special loop variable `item`:
+
+```html
+{{#each ["apples", "pears", "bananas"]}}
+<p>{{item}}</p>
+{{/each}}
+```
+
+You can also specify a name for the loop variable. This can be handy when working with nested loops.
+
+```html
+{{#each u in model.Users}}
+{{#each r in u.roles}}
+<p>Name: {{u.name}} Role: {{r}}</p>
+{{/each}}
+{{/each}}
+```
+
+When iterating over an object, the loop variable has two properties `.key` and `.value`:
+
+```html
+{{#each fruit in { "apples": "red", "bananas": "yellow" } }}
+<p>Fruit: {{fruit.key}} Color: {{fruit.value}}
+{{/each}}
+<p>
+```
+
+Inside the `{{#each}}` statement, a special variable `scope` is also available:
+
+```javascript
+{
+    index: 0,             // The index of the currently rendering item
+    item: 'Apples',       // The currently rendering item
+    items: [              // An array of all items being iterated
+        'Apples',
+        'Pears',
+        'Bananas',
+    ],    
+    first: true,          // True if the current item is the first item
+    last: true,           // True if the current item is the last item
+    outer: {}             // Reference to the next outer loop scope (if nested looping)
+}
+```
+
+This lets you do things like:
+
+```html
+{{#each User}}
+{{#if scope.first}}<hr />{{/if}}
+<p>item.name</p>
+{{#if scope.last}}<p> -- END -- </p>{{/if}}
+{{/each}}
+```
+
+You can also do odd/even rendering with `{{#if item.index % 2}}` etc...
+
+`{{#each}}` blocks can also have an `{{#else}}` clause that will be rendered if the collection is empty:
+
+```html
+{{#each model.user}}
+<p>item.name</p>
+{{#else}}
+<p>No Users Found :(</p>
+{{/each}}
+```

@@ -1,0 +1,18 @@
+---
+title: Security Considerations
+---
+# Security Considerations
+
+Since Moe.JS allows the execution of arbitrary JavaScript code it should only be used in situations where
+the template scripts of a trusted origin.
+
+You should never allow an end user to upload a Moe.JS template and then execute it on your server.
+
+eg: Suppose you're developing mailing list software, you shouldn't use Moe.JS as the template format
+for email templates.
+
+While Moe.JS provides a reasonably sandboxed environment that doesn't allow access to the file system, 
+databases etc..., it's by no means secure and doesn't provide protection from attacks or accidental end
+user mistakes such as infinite loop, stack overflows, allocating excessive memeory etc...
+
+

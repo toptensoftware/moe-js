@@ -1,0 +1,27 @@
+---
+title: Helper Functions
+---
+# Helper Functions
+
+You can write helper functions to be used in your templates by either declaring them inside the template using `{{#code}}` blocks (as described above), or by attaching functions to the `moe.helpers` object:
+
+```javascript
+const moe = require('moe-js');
+moe.helpers.FormatPrice = function (val)
+{
+    if (val == 0)
+        return "-";
+    else
+        return "$" + val.toFixed(2);
+}
+```
+
+You can then reference these helper function in your template as follows:
+
+```html
+<p>Price: {{helpers.FormatPrice(item.price)}}</p>
+```
+
+Note that you should NOT replace the existing `.helpers` instance - it contains internal helper
+functions used by the generated template function.
+

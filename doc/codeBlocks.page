@@ -1,0 +1,21 @@
+---
+title: Code blocks
+---
+# Code Blocks
+
+Code blocks let you define local helper functions:
+
+```html
+{{#code}}
+function FormatPrice(val)
+{
+    if (val == 0)
+        return "-";
+    else
+        return "$" + val.toFixed(2);
+}
+{{/code}}
+
+<p>Item Price: {{FormatPrice(23.99)}}</p>
+```
+

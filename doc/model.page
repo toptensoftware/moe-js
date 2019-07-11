@@ -1,0 +1,22 @@
+---
+title: The Model Variable
+---
+# The model Variable 
+
+Data passed to the template is available as the special `model` variable inside the template:
+
+eg: Suppose the template was invoked like so:
+
+```javascript
+template({ title: "This is the title" });
+```
+
+Inside the template, the model properties would be accessed as follows:
+
+```html
+<h1>{{model.title}}</h1>
+```
+
+(Unlike Handlebars, `{{title}}` won't work, you must specify `{{model.title}}`)
+
+
