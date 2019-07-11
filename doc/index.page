@@ -3,11 +3,11 @@ projectTitle: Moe-js
 banner: banner.png
 title: moe-js
 ---
-# Welcome to Moe-js
-
 <div class="banner" markdown=1>
 ![Banner](banner.png)
 </div>
+
+# Welcome to Moe-js
 
 "Moe-js" is a simple, fast, flexible, modern, async enabled, Handlebars inspired templating engine for JavaScript.
 
