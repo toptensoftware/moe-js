@@ -6,10 +6,6 @@ const Tokenizer = require('./tokenizer').Tokenizer;
 
 
 //////////////////////////////////////////////////////////////////////////////////
-// Tokenizer 
-
-
-//////////////////////////////////////////////////////////////////////////////////
 // MoeHelpers - functions used internally by generated template scripts
 
 function MoeHelpers(moe)
@@ -359,6 +355,22 @@ MoeEngine.prototype.compile = function(template, options)
 			
 			case "/with":
 				parts += "});";
+				blockTypeStack.pop();
+				break;
+
+			case "#capture":
+				blockTypeStack.push("capture");
+				if (options.asyncTemplate)
+				{
+					parts += `${token.expression} = await (async function() { let $buf=""; \n`;
+				}
+				else
+				{
+					parts += `${token.expression} = (function() { let $buf=""; \n`;
+				}
+
+			case "/capture":
+				parts += "return $buf; })();\n";
 				blockTypeStack.pop();
 				break;
 
