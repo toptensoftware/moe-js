@@ -15,3 +15,11 @@ and import it as follows:
 ```javascript
 const moe = require('@toptensoftware/moe-js');
 ```
+
+## Source Repository
+
+You can also get Moe-js directly from the public Git repository:
+
+* <https://github.com/toptensoftware/moe-js>
+
+
