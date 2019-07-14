@@ -16,9 +16,9 @@ and import it as follows:
 const moe = require('@toptensoftware/moe-js');
 ```
 
-## NPM Page
+## NPM Registry
 
-Moe.js can be found on npmjs.org her:
+Moe.js can be found on npmjs.org registry here:
 
 * <https://www.npmjs.com/package/@toptensoftware/moe-js>
 
