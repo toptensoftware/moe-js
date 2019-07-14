@@ -25,7 +25,7 @@ faster and facilitates the use of any JavaScript expression.
 
 ### Rewrite Helper Functions
 
-Helper functions are implemented differently in Moe-js.   See above for how to write Moe-js helpers.
+Helper functions are implemented differently in Moe-js.   [See here](helpers) for how to write Moe-js helpers.
 
 Don't forget you can also use in-template `{{#code}}` blocks for one off helpers.
 
