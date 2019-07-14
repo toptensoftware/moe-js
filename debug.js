@@ -1,29 +1,19 @@
 `use strict`
 var moe = require('./moe');
 
-    var template = moe.compile(`
-<div>
-    {{#if model.inStock}}
-    IN STOCK
-    {{^}}
-    OUT OF STOCK
-    {{/if}}
-<div>
-    `);
+var template = moe.compile(`
+{{#capture model.scripts}}
+<p>{{model.name}} - {{model.color}}</p>
+{{/capture}}
+{{{model.scripts}}}
+`);
 
-    console.log(template({inStock:true}));
+var result = template({ 
+    name: "Apple",
+    color: "Red",
+});
 
+console.log(template.impl.toString());
 
+console.log(result);
 
-
-/*
-var fs = require('fs');
-
-var Tokenizer = require('./tokenizer').Tokenizer;
-
-var template = fs.readFileSync("testTokens.moe", "utf8");
-for (var t of Tokenizer.tokenize(template))
-{
-    console.log(t);
-}
-*/

@@ -368,6 +368,7 @@ MoeEngine.prototype.compile = function(template, options)
 				{
 					parts += `${token.expression} = (function() { let $buf=""; \n`;
 				}
+				break;
 
 			case "/capture":
 				parts += "return $buf; })();\n";

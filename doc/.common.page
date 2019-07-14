@@ -1,6 +1,6 @@
 ---
 projectTitle: Moe-js
-projectSubTitle: "v0.1"
+projectSubTitle: "v0.2"
 projectUrlPrefix: /moe-js/
 prismLanguages:
   - javascript
@@ -25,6 +25,7 @@ navTree:
       - text: Rendering Collections|collections
       - text: With Blocks|withBlocks
       - text: Code Blocks|codeBlocks
+      - text: Capture Blocks|captureBlocks
       - text: Partials|partials
       - text: Raw Text|rawText
       - text: Whitespace Control|whitespace

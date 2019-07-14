@@ -664,16 +664,19 @@ test("Async Templates", async () => {
 
 test("Capture Block", () => {
     var template = moe.compile(`
-    {{#capture var x}}
+    {{#capture model.captured}}
     <p>{{model.name}} - {{model.color}}</p>
     {{/capture}}
     `);
-    
-    var result = template({ 
+
+    var model = { 
         name: "Apple",
         color: "Red",
-    });
+    };
+    
+    var result = template(model);
 
-    expect(result).toEqual("");
+    expect(result.trim()).toEqual("");
+    expect(model.captured).toMatch(/Apple - Red/);
 });
 

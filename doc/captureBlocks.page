@@ -1,0 +1,46 @@
+---
+title: Capture blocks
+---
+# Capture Blocks
+
+Capture blocks let you redirect the output of a template to a variable.
+
+For example the following causes the content of the capture block to be
+rendered to a string and stored in the variable `userNameParagraph`.
+
+```markup
+{{#capture var userNameParagraph}}
+<p>Model.UserName</p>
+{{/capture}}
+```
+
+This variable can then be used elsewhere in the template:
+
+```markup
+{{userNameParagraph}}
+```
+
+Capture blocks can also be used to pass additional content to an outer layout
+by storing additional content on the model object:
+
+```markup
+{{#capture model.userScripts}}
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.16.0/prism.min.js"></script>
+{{/capture}}
+```
+
+The layout file might then look something like this:
+
+```markup
+<html>
+<head>
+{{#if model.userScripts}}
+{{{model.userScripts}}}
+{{/if>}}
+</head>
+<body>
+{{{model.body}}}
+</body>
+</html>
+```
+
