@@ -19,7 +19,7 @@ navTree:
       - text: Expressions|expressions
       - text: Comments|comments
       - text: The model Variable|model
-      - text: Conditional Execution|Conditional
+      - text: Conditional Execution|conditional
       - text: Rendering Collections|collections
       - text: With Blocks|withBlocks
       - text: Code Blocks|codeBlocks
