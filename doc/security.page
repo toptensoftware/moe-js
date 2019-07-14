@@ -4,7 +4,7 @@ title: Security Considerations
 # Security Considerations
 
 Since Moe.JS allows the execution of arbitrary JavaScript code it should only be used in situations where
-the template scripts of a trusted origin.
+the template scripts come from a trusted origin.
 
 You should never allow an end user to upload a Moe.JS template and then execute it on your server.
 
