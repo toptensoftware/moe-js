@@ -1,13 +1,13 @@
 ---
-title: Basic Usage
+title: Compiling Templates
 ---
-# Basic Usage
+# Compiling Templates
 
 Before executing a template, you must first compile it.  
 
 ```javascript
 // Import moe
-const moe = require('moe-js');
+const moe = require('@toptensoftware/moe-js');
 
 // Compile a template from a string
 let template = moe.compile("<h1>{{model.title}}</h1>");

@@ -6,7 +6,7 @@ title: Express Integration
 You can use Moe-js as a view engine in Express:
 
 ```javascript
-const moe = require('moe-js');
+const moe = require('@toptensoftware/moe-js');
 
 // Use moe-js for '.moe' view templates
 app.engine('moe', moe.express(app));

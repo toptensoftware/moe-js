@@ -9,7 +9,8 @@ navTree:
   - text: Moe-js
     subItems:
       - text: Overview|.
-      - text: Basic Usage|basics
+      - text: Installation|install
+      - text: Compiling Templates|compile
       - text: Async Execution|async
       - text: Helper Functions|helpers
       - text: Compile Options|compileOptions

@@ -1,5 +1,5 @@
 {
-	"name": "moe-js",
+	"name": "@toptensoftware/moe-js",
 	"version": "0.1.0",
 	"description": "Lightweight, fast, Mustache inspired, JavaScript enabled template engine for Node/Express.",
 	"main": "moe.js",

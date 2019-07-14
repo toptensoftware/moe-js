@@ -27,13 +27,13 @@ function template(model [, context])
 When you import moe-js, the returned object is the default instance of the MoeEngine class.  
 
 ```javascript
-const moe = require('moe-js');
+const moe = require('@toptensoftware/moe-js');
 ```
 
 Although rarely necessary, you can create additional MoeEngine instances as follows:
 
 ```javascript
-const moe = require('moe-js');
+const moe = require('@toptensoftware/moe-js');
 const moe2 = new moe.MoeEngine();
 ```
 

@@ -1,0 +1,17 @@
+---
+title: Installation
+---
+
+# Installation
+
+Install Moe-js via npm:
+
+```
+npm install --save @toptensoftware/moe-js
+```
+
+and import it as follows:
+
+```javascript
+const moe = require('@toptensoftware/moe-js');
+```
