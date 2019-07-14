@@ -23,7 +23,7 @@ navTree:
       - text: Rendering Collections|collections
       - text: With Blocks|withBlocks
       - text: Code Blocks|codeBlocks
-      - text: Partials|Partials
+      - text: Partials|partials
       - text: Raw Text|rawText
       - text: Whitespace Control|whitespace
       - text: Escaping Braces|braces
