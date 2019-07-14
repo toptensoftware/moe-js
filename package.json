@@ -1,6 +1,6 @@
 {
 	"name": "@toptensoftware/moe-js",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Lightweight, fast, Mustache inspired, JavaScript enabled template engine for Node/Express.",
 	"main": "moe.js",
 	"author": "Topten Software",
