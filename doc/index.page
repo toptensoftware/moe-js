@@ -6,7 +6,7 @@
 
 # Welcome to Moe-js
 
-"Moe-js" is a simple, fast, flexible, modern, async enabled, Handlebars inspired templating engine for JavaScript.
+"Moe-js" is a simple, fast, flexible, modern, async enabled, Mustache/Handlebars inspired templating engine for JavaScript.
 
 * Mustache/Handlebars inspired format
 * Support for in-template JavaScript expressions
@@ -21,19 +21,15 @@
 
 ## Motivation
 
-Moe-js was born out of desire to get around some of the limitations of Handlebars, while still 
-providing a similar template syntax.  In particular, Moe-js is intended to address Handlebars'
-awkward helper methods and the lack of support for even simple expressions within the template. 
-Moe-js provides a way to "power-up" an existing set of Handlebars templates without having to 
-rewrite them from scratch.
+The primary goal behind Moe-js was to build a templating language with similar style to 
+Mustache/Handlebars but with ability to use Javascript directly in templates.
 
-With Moe-js, you get a similar syntax but all the power of JavaScript within the template.  Unlike
-Handlebars which is language agnostic, Moe-js is closely tied to the JavaScript language (which is 
-why it has "js" in it's name).
+Unlike Mustache/Handlebars which is language agnostic, Moe-js is deliberately and closely tied to 
+the JavaScript language (which is why it has "js" in it's name).
 
-Moe-js doesn't claim to be compatible with Handlebars but the syntax is very similar and existing
-templates can be converted fairly easily (certainly more easily than switching to a completely 
-different view engine).
+Moe-js doesn't claim to be compatible with Mustache/Handlebars but the syntax is very similar
+and existing templates can be converted fairly easily (certainly more easily than switching 
+to a completely different view engine).
 
 ## Documentation
 

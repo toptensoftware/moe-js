@@ -3,15 +3,15 @@ title: Converting Handlerbars Templates
 ---
 # Converting Handlerbars Templates
 
-As mentioned above, Moe-js doesn't claim to be compatible with Handlebars but does
+Moe-js doesn't claim to be compatible with Mustache/Handlebars but does
 have a similar syntax which lends it to easy conversion of existing templates to Moe-js.
 
-This section explains common things to watch out for if you're porting existing Handlebars
+This section explains common things to watch out for if you're porting existing Mustache/Handlebars
 templates.
 
 ### Use The `model.` Variable To Access Passed Data
 
-This is probably the biggest impact on existing templates.  Unlike Handlebars which automatically
+This is probably the biggest impact on existing templates.  Unlike Mustache/Handlebars which automatically
 maps referenced variables to the current scope, Moe-js doesn't provide this - primarily because
 under the covers this is straight JavaScript code.
 
@@ -19,7 +19,7 @@ While this is inconvenient for porting templates, it does make the templates mor
 faster and facilitates the use of any JavaScript expression.
 
 ```
-{{title}}           <- Handlebars
+{{title}}           <- Mustache/Handlebars
 {{model.title}}     <- Moe-js
 ```
 
@@ -35,23 +35,23 @@ Moe-js's partial directive expects a JavaScript expression which means the refer
 name must be quoted:
 
 ```
-{{> partial}}       <- Handlebars
+{{> partial}}       <- Mustache/Handlebars
 {{> "partial"}}     <- Moe-js
 ```
 
 ### Replace Shorthand Comments
 
-Handlebars allows two kinds of comments `{{!-- --}}` and `{{! }}`.  Moe-js only 
+Mustache/Handlebars allows two kinds of comments `{{!-- --}}` and `{{! }}`.  Moe-js only 
 supports the first format, since the second format might be a valid JavaScript expression (not operator).
 
 ```
-{{!-- Comment  --}} <- Handlebars or Moe-js
-{{! Comment }}      <- Handlebars only
+{{!-- Comment  --}} <- Mustache/Handlebars or Moe-js
+{{! Comment }}      <- Mustache/Handlebars only
 ```
 
-### Replace Handlebars Style Paths
+### Replace Mustache/Handlebars Style Paths
 
-Handlebars uses "paths" (eg: `.`,  `..` etc...) to reference the current and outer scopes.  These don't 
+Mustache/Handlebars uses "paths" (eg: `.`,  `..` etc...) to reference the current and outer scopes.  These don't 
 exist in Moe-js because expressions are plain JavaScript.
 
 In Moe-js, these paths generally aren't required since you can name loop variables explicitly and you
@@ -62,7 +62,7 @@ can always get back to the root `model` object.
 Moe-js doesn't support escaping braces with a backslash.  Replace with a JavaScript Expression:
 
 ```
-\{{{model.title}}       <- Handlebars
+\{{{model.title}}       <- Mustache/Handlebars
 {{'{'}}{{model.title}}  <- Moe-js
-{ {{~model.title}}      <- Moe-js or Handlebars
+{ {{~model.title}}      <- Moe-js or Mustache/Handlebars
 ```

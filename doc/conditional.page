@@ -12,7 +12,7 @@ The `{{#if}}` / `{{#else}}` / `{{/if}}` directives are used to conditionally inc
 {{/if}}
 ```
 
-Else blocks can be marked as `{{#else}}` or `{{else}}` (for Handlebars compatibility)
+Else blocks can be marked as `{{#else}}` or `{{else}}` (for Mustache/Handlebars compatibility)
 
 ```html
 {{#if model.quantity == 0}}

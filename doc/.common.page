@@ -41,6 +41,6 @@ navTree:
   - text: Miscellaneous
     subItems:
       - text: Security Considerations|security
-      - text: Converting Handlebars|converting
+      - text: Converting Templates|converting
       - text: Internals|internals
 ---

@@ -3,7 +3,7 @@ title: Expressions
 ---
 # Expressions
 
-Moe-js templates are similar to Handlebars templates, but there are some important 
+Moe-js templates are similar to Mustache/Handlebars templates, but there are some important 
 differences.  This section shows how to write Moe-js templates.
 
 ## Use `{{}}` to Embed Expressions

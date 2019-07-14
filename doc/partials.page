@@ -11,7 +11,7 @@ For example, this will invoke the "UserDetails" template, passing the current mo
 {{> "UserDetails" }}
 ```
 
-Note that unlike Handlebars, the name of the partial template must be quoted because it's a JavaScript expression - which 
+Note that unlike Mustache/Handlebars, the name of the partial template must be quoted because it's a JavaScript expression - which 
 also means you can dynamically synthesize the name of the partial to invoke:
 
 ```html
