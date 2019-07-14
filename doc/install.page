@@ -16,6 +16,12 @@ and import it as follows:
 const moe = require('@toptensoftware/moe-js');
 ```
 
+## NPM Page
+
+Moe.js can be found on npmjs.org her:
+
+* <https://www.npmjs.com/package/@toptensoftware/moe-js>
+
 ## Source Repository
 
 You can also get Moe-js directly from the public Git repository:
