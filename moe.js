@@ -6,6 +6,10 @@ const Tokenizer = require('./tokenizer').Tokenizer;
 
 
 //////////////////////////////////////////////////////////////////////////////////
+// Tokenizer 
+
+
+//////////////////////////////////////////////////////////////////////////////////
 // MoeHelpers - functions used internally by generated template scripts
 
 function MoeHelpers(moe)
@@ -368,7 +372,6 @@ MoeEngine.prototype.compile = function(template, options)
 				{
 					parts += `${token.expression} = (function() { let $buf=""; \n`;
 				}
-				break;
 
 			case "/capture":
 				parts += "return $buf; })();\n";
@@ -426,6 +429,7 @@ MoeEngine.prototype.compile = function(template, options)
 	finalCode = `let scope = null;\n`;
 	finalCode += `let $encode = helpers.encode;\n`;
 	finalCode += `let $buf = "";\n`;
+	finalCode += `let inner = context.inner;\n`;
 	finalCode += parts;
 	finalCode += "\n";
 	finalCode += `return $buf;`;
@@ -745,7 +749,9 @@ function ExpressMiddleware(moe, app)
 			let templateLayout = await moe.compileFileAsync (layoutFile, { asyncTemplate: true });
 
 			// Pass on the inner body
-			options.body = body;
+			context.inner = {
+				body: body
+			};
 
 			return await templateLayout(options, context);
 

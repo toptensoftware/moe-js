@@ -32,11 +32,11 @@ The name of the layout is determined in the following way:
 2. The `app.locals.layout` property
 3. Defaults to "layout"
 
-To suppress the use of a layout set the property to `false`.  Layout files are searched for in the same
-directory as other views.
+To suppress the use of a layout set the property to `false`.  Layout files are searched for 
+in the same directory as other views.
 
-On rendering the layout, the originally passed model will be decorated with a new property `body` containing
-the rendered content of the inner view.  
+On rendering the layout, the inner view's rendered body is available as the special 
+property `inner.body`:
 
 A simple minimal layout might look like this:
 
@@ -45,7 +45,7 @@ A simple minimal layout might look like this:
 <head>
 </head>
 <body>
-{{{ model.body }}}
+{{{ inner.body }}}
 </body>
 </html>
 ```
