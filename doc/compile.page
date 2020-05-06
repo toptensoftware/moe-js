@@ -10,7 +10,7 @@ Before executing a template, you must first compile it.
 const moe = require('@toptensoftware/moe-js');
 
 // Compile a template from a string
-let template = moe.compile("<h1>{{model.title}}</h1>");
+let template = moe.compile("<h1>{{model.name}}</h1>");
 ```
 
 Or compile from a file (the template will be cached so subsequent calls will re-use the same template)
