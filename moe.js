@@ -429,7 +429,7 @@ MoeEngine.prototype.compile = function(template, options)
 	finalCode = `let scope = null;\n`;
 	finalCode += `let $encode = helpers.encode;\n`;
 	finalCode += `let $buf = "";\n`;
-	finalCode += `let inner = context.inner;\n`;
+	finalCode += `let inner = context ? context.inner : null;\n`;
 	finalCode += parts;
 	finalCode += "\n";
 	finalCode += `return $buf;`;
