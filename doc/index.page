@@ -1,4 +1,8 @@
 ---
+title: "Moe-js"
+subtitle: "A simple, fast, flexible, modern, async enabled, Mustache/Handlebars inspired templating engine for JavaScript."
+banner: banner.png
+projectTitle: moe-js
 ---
 <div class="banner" markdown=1>
 ![Banner](banner.png)
