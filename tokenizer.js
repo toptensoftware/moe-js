@@ -1,5 +1,5 @@
 
-class TokenError extends Error
+export class TokenError extends Error
 {
 	constructor(message, position)
 	{
@@ -8,7 +8,7 @@ class TokenError extends Error
 	}
 }
 
-class Tokenizer
+export class Tokenizer
 {
     static isLineSpace(ch)
     {
@@ -484,7 +484,3 @@ class Tokenizer
     }
 }
 
-module.exports = {
-    TokenError: TokenError,
-    Tokenizer: Tokenizer,
-}

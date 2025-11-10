@@ -1,89 +1,91 @@
-var moe = require('./moe');
-var Tokenizer = require('./tokenizer').Tokenizer;
-var fs = require('fs');
+import { test } from "node:test";
+import { strict as assert } from "node:assert";
+import moe from './index.js';
+import { Tokenizer } from './tokenizer.js';
+import fs from 'fs';
 
 test("Skip linespace", () => {
 
-    expect(Tokenizer.skipLineSpace(".....     $", 5)).toBe(10);
-    expect(Tokenizer.skipLineSpace(".....     \r\n", 5)).toBe(10);
+    assert.equal(Tokenizer.skipLineSpace(".....     $", 5), 10);
+    assert.equal(Tokenizer.skipLineSpace(".....     \r\n", 5), 10);
 
 });
 
 test("Skip whitespace", () => {
 
-    expect(Tokenizer.skipWhiteSpace(".....     $", 5)).toBe(10);
-    expect(Tokenizer.skipWhiteSpace(".....     \t\r\n", 5)).toBe(13);
+    assert.equal(Tokenizer.skipWhiteSpace(".....     $", 5), 10);
+    assert.equal(Tokenizer.skipWhiteSpace(".....     \t\r\n", 5), 13);
 
 });
 
 test("Read identifier", () => {
 
-    expect(Tokenizer.readIdentifier(".....identifier ", 5)).toBe("identifier");
-    expect(Tokenizer.readIdentifier(".....identifier\t", 5)).toBe("identifier");
-    expect(Tokenizer.readIdentifier(".....identifier()", 5)).toBe("identifier");
+    assert.equal(Tokenizer.readIdentifier(".....identifier ", 5), "identifier");
+    assert.equal(Tokenizer.readIdentifier(".....identifier\t", 5), "identifier");
+    assert.equal(Tokenizer.readIdentifier(".....identifier()", 5), "identifier");
 
 });
 
 test("Skip String (double quoted)", () => {
 
-    expect(() => Tokenizer.skipString('....."12345\0', 5)).toThrowError();
-    expect(() => Tokenizer.skipString('....."12345\n', 5)).toThrowError();
-    expect(() => Tokenizer.skipString('....."12345\r', 5)).toThrowError();
-    expect(Tokenizer.skipString('....."12345"zzz', 5)).toBe(12);
-    expect(Tokenizer.skipString('....."1\\"45"zzz', 5)).toBe(12);
-    expect(Tokenizer.skipString('....."1\\\'45"zzz', 5)).toBe(12);
+    assert.throws(() => Tokenizer.skipString('....."12345\0', 5));
+    assert.throws(() => Tokenizer.skipString('....."12345\n', 5));
+    assert.throws(() => Tokenizer.skipString('....."12345\r', 5));
+    assert.equal(Tokenizer.skipString('....."12345"zzz', 5), 12);
+    assert.equal(Tokenizer.skipString('....."1\\"45"zzz', 5), 12);
+    assert.equal(Tokenizer.skipString('....."1\\\'45"zzz', 5), 12);
 
 });
 
 test("Skip String (single quoted)", () => {
 
-    expect(() => Tokenizer.skipString(".....'12345\0", 5)).toThrow();
-    expect(() => Tokenizer.skipString(".....'12345\n", 5)).toThrow();
-    expect(() => Tokenizer.skipString(".....'12345\r", 5)).toThrow();
-    expect(Tokenizer.skipString(".....'12345'", 5)).toBe(12);
-    expect(Tokenizer.skipString(".....'1\\\"45'", 5)).toBe(12);
-    expect(Tokenizer.skipString(".....'1\\'45'", 5)).toBe(12);
+    assert.throws(() => Tokenizer.skipString(".....'12345\0", 5));
+    assert.throws(() => Tokenizer.skipString(".....'12345\n", 5));
+    assert.throws(() => Tokenizer.skipString(".....'12345\r", 5));
+    assert.equal(Tokenizer.skipString(".....'12345'", 5), 12);
+    assert.equal(Tokenizer.skipString(".....'1\\\"45'", 5), 12);
+    assert.equal(Tokenizer.skipString(".....'1\\'45'", 5), 12);
 
 });
 
 test("Skip JavaScript", () => {
 
-    expect(Tokenizer.skipJavaScript(".....12345", 5)).toBe(10);
-    expect(Tokenizer.skipJavaScript(".....12345}", 5)).toBe(10);
-    expect(Tokenizer.skipJavaScript(".....{12345}}", 5)).toBe(12);
-    expect(Tokenizer.skipJavaScript(".....{{12345}}}", 5)).toBe(14);
-    expect(Tokenizer.skipJavaScript(".....(12345)", 5)).toBe(12);
-    expect(Tokenizer.skipJavaScript(".....(12345))", 5)).toBe(12);
-    expect(Tokenizer.skipJavaScript(".....((12345)))", 5)).toBe(14);
-    expect(Tokenizer.skipJavaScript(".....[12345]", 5)).toBe(12);
-    expect(Tokenizer.skipJavaScript(".....[12345]]", 5)).toBe(12);
-    expect(Tokenizer.skipJavaScript(".....[[12345]]]", 5)).toBe(14);
-    expect(Tokenizer.skipJavaScript(".....'\\''", 5)).toBe(9);
-    expect(Tokenizer.skipJavaScript('....."\\""', 5)).toBe(9);
+    assert.equal(Tokenizer.skipJavaScript(".....12345", 5), 10);
+    assert.equal(Tokenizer.skipJavaScript(".....12345}", 5), 10);
+    assert.equal(Tokenizer.skipJavaScript(".....{12345}}", 5), 12);
+    assert.equal(Tokenizer.skipJavaScript(".....{{12345}}}", 5), 14);
+    assert.equal(Tokenizer.skipJavaScript(".....(12345)", 5), 12);
+    assert.equal(Tokenizer.skipJavaScript(".....(12345))", 5), 12);
+    assert.equal(Tokenizer.skipJavaScript(".....((12345)))", 5), 14);
+    assert.equal(Tokenizer.skipJavaScript(".....[12345]", 5), 12);
+    assert.equal(Tokenizer.skipJavaScript(".....[12345]]", 5), 12);
+    assert.equal(Tokenizer.skipJavaScript(".....[[12345]]]", 5), 14);
+    assert.equal(Tokenizer.skipJavaScript(".....'\\''", 5), 9);
+    assert.equal(Tokenizer.skipJavaScript('....."\\""', 5), 9);
 });
 
 test("Skip String (template string)", () => {
 
-    expect(() => Tokenizer.skipTemplateString("`.....\0", 5)).toThrow();
+    assert.throws(() => Tokenizer.skipTemplateString("`.....\0", 5))
 
-    expect(Tokenizer.skipTemplateString(".....`123\r5`zzz", 5)).toBe(12);
-    expect(Tokenizer.skipTemplateString(".....`123\n5`zzz", 5)).toBe(12);
-    expect(Tokenizer.skipTemplateString(".....`123\n5`zzz", 5)).toBe(12);
-    expect(Tokenizer.skipTemplateString(".....`123${expr}456`zzz", 5)).toBe(20);
-    expect(Tokenizer.skipTemplateString(".....`123${'``'}456`zzz", 5)).toBe(20);
-    expect(Tokenizer.skipTemplateString('.....`123${"``"}456`zzz', 5)).toBe(20);
-    expect(Tokenizer.skipTemplateString('.....`123${{{}}}456`zzz', 5)).toBe(20);
-    expect(Tokenizer.skipTemplateString('.....`\\${${expr}456`zzz', 5)).toBe(20);
+    assert.equal(Tokenizer.skipTemplateString(".....`123\r5`zzz", 5), 12);
+    assert.equal(Tokenizer.skipTemplateString(".....`123\n5`zzz", 5), 12);
+    assert.equal(Tokenizer.skipTemplateString(".....`123\n5`zzz", 5), 12);
+    assert.equal(Tokenizer.skipTemplateString(".....`123${expr}456`zzz", 5), 20);
+    assert.equal(Tokenizer.skipTemplateString(".....`123${'``'}456`zzz", 5), 20);
+    assert.equal(Tokenizer.skipTemplateString('.....`123${"``"}456`zzz', 5), 20);
+    assert.equal(Tokenizer.skipTemplateString('.....`123${{{}}}456`zzz', 5), 20);
+    assert.equal(Tokenizer.skipTemplateString('.....`\\${${expr}456`zzz', 5), 20);
     
 });
 
 test("Consume line space", () => {
 
-    expect(Tokenizer.consumeLineSpace("     12345     ", 5, 10)).toEqual(expect.arrayContaining([0, 15]));
-    expect(Tokenizer.consumeLineSpace("     12345     \r\n", 5, 10)).toEqual(expect.arrayContaining([0, 17]));
-    expect(Tokenizer.consumeLineSpace("\r\n   12345     \r\n", 5, 10)).toEqual(expect.arrayContaining([2, 17]));
-    expect(Tokenizer.consumeLineSpace("pre  12345     \r\n", 5, 10)).toEqual(expect.arrayContaining([5,10]));
-    expect(Tokenizer.consumeLineSpace("     12345 post\r\n", 5, 10)).toEqual(expect.arrayContaining([5,10]));
+    assert.deepEqual(Tokenizer.consumeLineSpace("     12345     ", 5, 10), [0, 15]);
+    assert.deepEqual(Tokenizer.consumeLineSpace("     12345     \r\n", 5, 10), [0, 17]);
+    assert.deepEqual(Tokenizer.consumeLineSpace("\r\n   12345     \r\n", 5, 10), [2, 17]);
+    assert.deepEqual(Tokenizer.consumeLineSpace("pre  12345     \r\n", 5, 10), [5,10]);
+    assert.deepEqual(Tokenizer.consumeLineSpace("     12345 post\r\n", 5, 10), [5,10]);
 
 });
 
@@ -91,7 +93,7 @@ test("Tokenizer", () => {
 
     var template = fs.readFileSync("testTokens.moe", "utf8");
     template = template.replace("\r\n", "\n");
-    var expected = [
+    var asserted = [
         { kind: 'literal', text: 'line1\n' },
         { kind: '{{}}', expression: 'expr' },
         { kind: '{{{}}}', expression: 'expr' },
@@ -120,20 +122,20 @@ test("Tokenizer", () => {
         actual.push(token);
     }
 
-    expect(actual).toEqual(expected);
+    assert.deepEqual(actual, asserted);
 });
 
 
 test("Basic output", () => {
-    expect(moe.compile("<html>")({})).toBe("<html>");
+    assert.equal(moe.compile("<html>")({}), "<html>");
 });
 
 test("Escaped text", () => {
-    expect(moe.compile("<p>{{model.x}}</p>")({x:"<br/>"})).toBe("<p>&lt;br/&gt;</p>");
+    assert.equal(moe.compile("<p>{{model.x}}</p>")({x:"<br/>"}), "<p>&lt;br/&gt;</p>");
 })
 
 test("Raw text", () => {
-    expect(moe.compile("<p>{{{model.x}}}</p>")({x:"<br/>"})).toBe("<p><br/></p>");
+    assert.equal(moe.compile("<p>{{{model.x}}}</p>")({x:"<br/>"}), "<p><br/></p>");
 })
 
 test("Comments (single line)", () => {
@@ -145,9 +147,9 @@ test("Comments (single line)", () => {
     
     var result = template({});
 
-    expect(result).toMatch(/PRE/);
-    expect(result).not.toMatch(/Comment/);
-    expect(result).toMatch(/POST/);
+    assert.match(result, /PRE/);
+    assert.doesNotMatch(result, /Comment/);
+    assert.match(result, /POST/);
 })
 
 test("If Block (true)", () => {
@@ -162,7 +164,7 @@ test("If Block (true)", () => {
         x: true 
     });
 
-    expect(result).toMatch(/TRUE/);
+    assert.match(result, /TRUE/);
 });
 
 
@@ -178,7 +180,7 @@ test("If Block (false)", () => {
         x: false 
     });
 
-    expect(result).not.toMatch(/TRUE/);
+    assert.doesNotMatch(result, /TRUE/);
 });
 
 test("Unless Block (true)", () => {
@@ -193,7 +195,7 @@ test("Unless Block (true)", () => {
         x: true 
     });
 
-    expect(result).not.toMatch(/TRUE/);
+    assert.doesNotMatch(result, /TRUE/);
 });
 
 
@@ -209,7 +211,7 @@ test("Unless Block (false)", () => {
         x: false 
     });
 
-    expect(result).toMatch(/TRUE/);
+    assert.match(result, /TRUE/);
 });
 
 test("If/Else Block (true)", () => {
@@ -226,7 +228,7 @@ test("If/Else Block (true)", () => {
         x: true 
     });
 
-    expect(result).toMatch(/TRUE/);
+    assert.match(result, /TRUE/);
 });
 
 test("If/Else Block (false)", () => {
@@ -243,7 +245,7 @@ test("If/Else Block (false)", () => {
         x: false 
     });
 
-    expect(result).toMatch(/FALSE/);
+    assert.match(result, /FALSE/);
 });
 
 test("If/Else Block (using ^)", () => {
@@ -260,7 +262,7 @@ test("If/Else Block (using ^)", () => {
         x: true 
     });
 
-    expect(result).toMatch(/TRUE/);
+    assert.match(result, /TRUE/);
 });
 
 
@@ -280,8 +282,8 @@ test("If/ElseIf Block (true)", () => {
         x: 0
     });
 
-    expect(result).toMatch(/ZERO/);
-    expect(result).not.toMatch(/ONE/);
+    assert.match(result, /ZERO/);
+    assert.doesNotMatch(result, /ONE/);
 });
 
 test("If/ElseIf Block (false, true)", () => {
@@ -298,8 +300,8 @@ test("If/ElseIf Block (false, true)", () => {
         x: 1
     });
 
-    expect(result).not.toMatch(/ZERO/);
-    expect(result).toMatch(/ONE/);
+    assert.doesNotMatch(result, /ZERO/);
+    assert.match(result, /ONE/);
 });
 
 
@@ -317,8 +319,8 @@ test("If/ElseIf Block (using ^if)", () => {
         x: 0
     });
 
-    expect(result).toMatch(/ZERO/);
-    expect(result).not.toMatch(/ONE/);
+    assert.match(result, /ZERO/);
+    assert.doesNotMatch(result, /ONE/);
 });
 
 test("If/ElseIf Block (0)", () => {
@@ -337,9 +339,9 @@ test("If/ElseIf Block (0)", () => {
         x: 0
     });
 
-    expect(result).toMatch(/ZERO/);
-    expect(result).not.toMatch(/ONE/);
-    expect(result).not.toMatch(/OTHER/);
+    assert.match(result, /ZERO/);
+    assert.doesNotMatch(result, /ONE/);
+    assert.doesNotMatch(result, /OTHER/);
 });
 
 test("If/ElseIf/Else Block (1)", () => {
@@ -358,9 +360,9 @@ test("If/ElseIf/Else Block (1)", () => {
         x: 1
     });
 
-    expect(result).not.toMatch(/ZERO/);
-    expect(result).toMatch(/ONE/);
-    expect(result).not.toMatch(/OTHER/);
+    assert.doesNotMatch(result, /ZERO/);
+    assert.match(result, /ONE/);
+    assert.doesNotMatch(result, /OTHER/);
 });
 
 test("If/ElseIf/Else Block (2)", () => {
@@ -379,9 +381,9 @@ test("If/ElseIf/Else Block (2)", () => {
         x: 2
     });
 
-    expect(result).not.toMatch(/ZERO/);
-    expect(result).not.toMatch(/ONE/);
-    expect(result).toMatch(/OTHER/);
+    assert.doesNotMatch(result, /ZERO/);
+    assert.doesNotMatch(result, /ONE/);
+    assert.match(result, /OTHER/);
 });
 
 
@@ -393,7 +395,7 @@ test("Each Block (Array)", () => {
         x: ["Apples", "Pears", "Bananas"] 
     });
 
-    expect(result).toBe("ApplesPearsBananas");
+    assert(result, "ApplesPearsBananas");
 
 });
 
@@ -411,7 +413,7 @@ test("Each/Else Block (true)", () => {
         x: ["Apples", "Pears", "Bananas"] 
     });
 
-    expect(result).not.toMatch(/FALSE/);
+    assert.doesNotMatch(result, /FALSE/);
 });
 
 test("Each/Else Block (false)", () => {
@@ -428,7 +430,7 @@ test("Each/Else Block (false)", () => {
         x: [] 
     });
 
-    expect(result).toMatch(/FALSE/);
+    assert.match(result, /FALSE/);
 });
 
 test("Each Block (key/value)", () => {
@@ -447,9 +449,9 @@ test("Each Block (key/value)", () => {
         }
     });
 
-    expect(result).toMatch(/Apples\=Red/);
-    expect(result).toMatch(/Bananas\=Yellow/);
-    expect(result).toMatch(/Oranges\=Orange/);
+    assert.match(result, /Apples\=Red/);
+    assert.match(result, /Bananas\=Yellow/);
+    assert.match(result, /Oranges\=Orange/);
 });
 
 
@@ -469,9 +471,9 @@ test("Each Block (generator)", () => {
         }
     });
 
-    expect(result).toMatch(/Apples\=Red/);
-    expect(result).toMatch(/Bananas\=Yellow/);
-    expect(result).toMatch(/Oranges\=Orange/);
+    assert.match(result, /Apples\=Red/);
+    assert.match(result, /Bananas\=Yellow/);
+    assert.match(result, /Oranges\=Orange/);
 });
 
 
@@ -487,12 +489,12 @@ test("Each Block (nested with loop var)", () => {
     
     var result = template({});
 
-    expect(result).toMatch(/1a/);
-    expect(result).toMatch(/1b/);
-    expect(result).toMatch(/2a/);
-    expect(result).toMatch(/2b/);
-    expect(result).toMatch(/3a/);
-    expect(result).toMatch(/3b/);
+    assert.match(result, /1a/);
+    assert.match(result, /1b/);
+    assert.match(result, /2a/);
+    assert.match(result, /2b/);
+    assert.match(result, /3a/);
+    assert.match(result, /3b/);
 });
 
 test("Each Block (scope index)", () => {
@@ -505,9 +507,9 @@ test("Each Block (scope index)", () => {
     
     var result = template({});
 
-    expect(result).toMatch(/0=1/);
-    expect(result).toMatch(/1=2/);
-    expect(result).toMatch(/2=3/);
+    assert.match(result, /0=1/);
+    assert.match(result, /1=2/);
+    assert.match(result, /2=3/);
 });
 
 test("Each Block (scope first)", () => {
@@ -524,9 +526,9 @@ test("Each Block (scope first)", () => {
     
     var result = template({});
 
-    expect(result).toMatch(/0=1/);
-    expect(result).toMatch(/1:2/);
-    expect(result).toMatch(/2:3/);
+    assert.match(result, /0=1/);
+    assert.match(result, /1:2/);
+    assert.match(result, /2:3/);
 });
 
 test("Each Block (scope last)", () => {
@@ -543,9 +545,9 @@ test("Each Block (scope last)", () => {
     
     var result = template({});
 
-    expect(result).toMatch(/0:1/);
-    expect(result).toMatch(/1:2/);
-    expect(result).toMatch(/2=3/);
+    assert.match(result, /0:1/);
+    assert.match(result, /1:2/);
+    assert.match(result, /2=3/);
 });
 
 
@@ -568,7 +570,7 @@ test("Code Block", () => {
         x: 12.9999
     });
 
-    expect(result).toMatch(/##\$13.00##/);
+    assert.match(result, /##\$13.00##/);
 });
 
 test("With Block (named item)", () => {
@@ -585,7 +587,7 @@ test("With Block (named item)", () => {
         }
     });
 
-    expect(result).toMatch(/Apple - Red/);
+    assert.match(result, /Apple - Red/);
 
 });
 
@@ -603,7 +605,7 @@ test("With Block (unnamed item)", () => {
         }
     });
 
-    expect(result).toMatch(/Apple - Red/);
+    assert.match(result, /Apple - Red/);
 
 });
 
@@ -623,7 +625,7 @@ test("With/Else Block (true)", () => {
         }
     });
 
-    expect(result).toMatch(/Apple - Red/);
+    assert.match(result, /Apple - Red/);
 
 });
 
@@ -640,7 +642,7 @@ test("With/Else Block (false)", () => {
         obj: null
     });
 
-    expect(result).toMatch(/FALSE/);
+    assert.match(result, /FALSE/);
 
 });
 
@@ -650,7 +652,7 @@ test("Async Templates", async () => {
     {{await model.promise}}
     `, true);
 
-    expect(template.isAsync).toBe(true);
+    assert(template.isAsync, true);
     
     var result = await template({ 
         promise: new Promise((resolve, reject) => {
@@ -658,7 +660,7 @@ test("Async Templates", async () => {
         }),
     });
 
-    expect(result).toMatch(/Hello/);
+    assert.match(result, /Hello/);
 
 });
 
@@ -676,7 +678,14 @@ test("Capture Block", () => {
     
     var result = template(model);
 
-    expect(result.trim()).toEqual("");
-    expect(model.captured).toMatch(/Apple - Red/);
+    assert.equal(result.trim(), "");
+    assert.match(model.captured, /Apple - Red/);
+});
+
+test("Express", () => {
+
+    moe.express({
+    });
+
 });
 
