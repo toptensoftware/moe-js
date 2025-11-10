@@ -1,6 +1,5 @@
-
-//////////////////////////////////////////////////////////////////////////////////
-// Express integration
+import path from "node:path";
+import fs from "node:fs";
 
 export class MoeExpressHooks
 {
@@ -70,16 +69,9 @@ export class MoeExpressHooks
         for (let i=0; i<viewFolders.length; i++)
         {
             let file = path.resolve(viewFolders[i], name);
-            try
+            if (fs.existsSync(file))
             {
-                if (fs.existsSync(file))
-                {
-                    return file;
-                }
-            }
-            catch(err)
-            {
-                // Ignore
+                return file;
             }
         }
 
